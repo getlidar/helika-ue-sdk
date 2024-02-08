@@ -1,0 +1,8 @@
+{
+	"RemapUnityFiles": 
+	{
+		"Module.Helika.cpp.obj": [
+			"Helika.cpp.obj"
+		]
+	}
+}

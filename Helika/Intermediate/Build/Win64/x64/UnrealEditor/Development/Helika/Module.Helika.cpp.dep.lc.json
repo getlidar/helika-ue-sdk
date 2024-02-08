@@ -1,0 +1,24 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "c:\\users\\hamza\\documents\\unreal projects\\helikapoject\\plugins\\helika\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\helika\\module.helika.cpp",
+        "ProvidedModule": "",
+        "PCH": "c:\\users\\hamza\\documents\\unreal projects\\helikapoject\\intermediate\\build\\win64\\x64\\helikapojecteditor\\development\\engine\\sharedpch.engine.cpp20.h.pch",
+        "Includes": [
+            "c:\\users\\hamza\\documents\\unreal projects\\helikapoject\\plugins\\helika\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\helika\\definitions.helika.h",
+            "c:\\users\\hamza\\documents\\unreal projects\\helikapoject\\plugins\\helika\\intermediate\\build\\win64\\unrealeditor\\inc\\helika\\uht\\helika.init.gen.cpp",
+            "c:\\users\\hamza\\documents\\unreal projects\\helikapoject\\plugins\\helika\\intermediate\\build\\win64\\unrealeditor\\inc\\helika\\uht\\helikaactor.gen.cpp",
+            "c:\\users\\hamza\\documents\\unreal projects\\helikapoject\\plugins\\helika\\source\\helika\\public\\helikaactor.h",
+            "c:\\program files\\epic games\\ue_5.3\\engine\\source\\runtime\\online\\http\\public\\httpmodule.h",
+            "c:\\program files\\epic games\\ue_5.3\\engine\\source\\runtime\\online\\http\\public\\interfaces\\ihttprequest.h",
+            "c:\\program files\\epic games\\ue_5.3\\engine\\source\\runtime\\online\\http\\public\\interfaces\\ihttpbase.h",
+            "c:\\program files\\epic games\\ue_5.3\\engine\\source\\runtime\\online\\http\\public\\interfaces\\ihttpresponse.h",
+            "c:\\users\\hamza\\documents\\unreal projects\\helikapoject\\plugins\\helika\\intermediate\\build\\win64\\unrealeditor\\inc\\helika\\uht\\helikaactor.generated.h",
+            "c:\\users\\hamza\\documents\\unreal projects\\helikapoject\\plugins\\helika\\source\\helika\\private\\helika.cpp",
+            "c:\\users\\hamza\\documents\\unreal projects\\helikapoject\\plugins\\helika\\source\\helika\\public\\helika.h",
+            "c:\\users\\hamza\\documents\\unreal projects\\helikapoject\\plugins\\helika\\source\\helika\\private\\helikaactor.cpp"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}
