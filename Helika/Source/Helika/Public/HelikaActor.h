@@ -22,7 +22,7 @@ enum class HelikaEnvironment : uint8 {
 };
 
 USTRUCT(BlueprintType)
-struct FHEvents
+struct FHEvent
 {
 	GENERATED_BODY()
 
@@ -48,7 +48,7 @@ struct FHSession
 	FString id;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray <FHEvents> events;
+	TArray <FHEvent> events;
 };
 
 UCLASS()
@@ -82,6 +82,12 @@ public:
 	void Init(FString apiKeyIn, FString gameIdIN, HelikaEnvironment env, bool enabled = false);
 
 	UFUNCTION(BlueprintCallable, Category = "Helika")
+	void SetPlayerId(FString playerId);
+	
+	UFUNCTION(BlueprintCallable, Category = "Helika")
+	void SetEnableEvents(bool enabled);
+
+	UFUNCTION(BlueprintCallable, Category = "Helika")
 	void SendEvent(FHSession helikaEvents);
 
 private:        
@@ -102,7 +108,7 @@ protected:
 
 	FString _sessionID;
 
-	FString _gamerID;
+	FString _playerId;
 
 	FString _deviceId;
 

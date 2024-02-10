@@ -10,7 +10,7 @@ AHelikaActor::AHelikaActor()
 void AHelikaActor::BeginPlay()
 {
 	Super::BeginPlay();
-    _gamerID = playerId;
+    _playerId = playerId;
     Init(apiKey, gameId, helikaEnv, sendingEvents); 
 }
 
@@ -33,6 +33,17 @@ void AHelikaActor::Init(FString apiKeyIn, FString gameIdIN, HelikaEnvironment en
 {
     if (_isInitialized)
     {
+        UE_LOG(LogTemp, Log, TEXT("HelikaActor is already initialized"));
+        return;
+    }
+
+    if (gameIdIN.IsEmpty()) {
+        UE_LOG(LogTemp, Error, TEXT("Missing Game ID"));
+        return;
+    }
+    
+    if (apiKeyIn.IsEmpty()) {
+        UE_LOG(LogTemp, Error, TEXT("Invalid API Key"));
         return;
     }
 
@@ -40,10 +51,21 @@ void AHelikaActor::Init(FString apiKeyIn, FString gameIdIN, HelikaEnvironment en
     _gameId = gameIdIN;
     _baseUrl = ConvertUrl(env);
     _sessionID = FGuid::NewGuid().ToString();
+    _isInitialized = true;
 
     _enabled = env != HelikaEnvironment::Localhost ? enabled : false;
 
     CreateSession();
+}
+
+void AHelikaActor::SetPlayerId(FString playerId)
+{
+    _playerId = playerId;
+}
+
+void AHelikaActor::SetEnableEvents(bool enabled)
+{
+    _enabled = enabled;
 }
 
 void AHelikaActor::SendHTTPPost(FString url, FString data)
@@ -97,8 +119,8 @@ void AHelikaActor::SendEvent(FHSession helikaEvents)
         if (Event.game_id.IsEmpty())
             Event.game_id = _gameId;
         Event.created_at = FDateTime::UtcNow().ToIso8601();
-        Event.event.Add("sessionID", _sessionID);
-        Event.event.Add("gamer_id", _gamerID);
+        Event.event.Add("session_id", _sessionID);
+        Event.event.Add("player_id", _playerId);
     }
     FString JSONPayload;
     FJsonObjectConverter::UStructToJsonObjectString(helikaEvents, JSONPayload, 0, 0);
@@ -108,20 +130,31 @@ void AHelikaActor::SendEvent(FHSession helikaEvents)
 
 void AHelikaActor::CreateSession()
 {
-    FHEvents Fevents;
-    Fevents.event_type = "SESSION_CREATED";
-    Fevents.game_id = "HELIKA_SDK";
+    FHEvent fEvent;
+    fEvent.event_type = "session_created";
 
-    Fevents.event.Add("sdk_name", "Unreal");
-    Fevents.event.Add("sdk_version", "0.1.0");
-    Fevents.event.Add("sdk_class", "HelikaActor");
-    Fevents.event.Add("sessionID", _sessionID);
+    // Todo: Turn these into static variables
+    fEvent.event.Add("sdk_name", "Unreal");
+    fEvent.event.Add("sdk_version", "0.1.0");
+    fEvent.event.Add("sdk_class", "HelikaActor");
+    fEvent.event.Add("session_id", _sessionID);
+    fEvent.event.Add("event_sub_type", "session_created");
 
-    TArray<FHEvents> Feventsarray;
-    Feventsarray.Add(Fevents);
+    // Todo: Add missing if applicable
+    // fEvent.event.Add("sdk_platform", "");
+    // fEvent.event.Add("os", "");
+    // fEvent.event.Add("os_family", "");
+    // fEvent.event.Add("device_model", "");
+    // fEvent.event.Add("device_name", "");
+    // fEvent.event.Add("device_type", "");
+    // fEvent.event.Add("device_ue_unique_identifier", "");
+    // fEvent.event.Add("device_processor_type", "");
+
+    TArray<FHEvent> fEventsArray;
+    fEventsArray.Add(fEvent);
 
     FHSession Fsession;
-    Fsession.events = Feventsarray;
+    Fsession.events = fEventsArray;
 
     SendEvent(Fsession); 
 }
