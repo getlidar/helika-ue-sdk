@@ -1,32 +1,31 @@
 
 #include "HelikaActor.h"
 
-
 AHelikaActor::AHelikaActor()
 {
-	PrimaryActorTick.bCanEverTick = true;
+  PrimaryActorTick.bCanEverTick = true;
 }
 
 void AHelikaActor::BeginPlay()
 {
-	Super::BeginPlay();
-    _playerId = playerId;
-    Init(apiKey, gameId, helikaEnv, sendingEvents); 
+  Super::BeginPlay();
+  _playerId = playerId;
+  Init(apiKey, gameId, helikaEnv, sendingEvents);
 }
 
 FString AHelikaActor::ConvertUrl(HelikaEnvironment baseUrl)
 {
-    switch (baseUrl)
-    {
-    case HelikaEnvironment::Production:
-        return "https://api.helika.io/v1";
-    case HelikaEnvironment::Develop:
-        return "https://api-stage.helika.io/v1";
-    case HelikaEnvironment::Localhost:
-        return "http://localhost:8181/v1";
-    default:
-        return "http://localhost:8181/v1";
-    }
+  switch (baseUrl)
+  {
+  case HelikaEnvironment::Production:
+    return "https://api.helika.io/v1";
+  case HelikaEnvironment::Develop:
+    return "https://api-stage.helika.io/v1";
+  case HelikaEnvironment::Localhost:
+    return "http://localhost:8181/v1";
+  default:
+    return "http://localhost:8181/v1";
+  }
 }
 
 void AHelikaActor::Init(FString apiKeyIn, FString gameIdIN, HelikaEnvironment env, bool enabled)
@@ -37,12 +36,14 @@ void AHelikaActor::Init(FString apiKeyIn, FString gameIdIN, HelikaEnvironment en
         return;
     }
 
-    if (gameIdIN.IsEmpty()) {
+    if (gameIdIN.IsEmpty())
+    {
         UE_LOG(LogTemp, Error, TEXT("Missing Game ID"));
         return;
     }
-    
-    if (apiKeyIn.IsEmpty()) {
+
+    if (apiKeyIn.IsEmpty())
+    {
         UE_LOG(LogTemp, Error, TEXT("Invalid API Key"));
         return;
     }
@@ -58,20 +59,16 @@ void AHelikaActor::Init(FString apiKeyIn, FString gameIdIN, HelikaEnvironment en
     CreateSession();
 }
 
-void AHelikaActor::SetPlayerId(FString playerId)
-{
-    _playerId = playerId;
-}
-
-void AHelikaActor::SetEnableEvents(bool enabled)
-{
-    _enabled = enabled;
-}
-
 void AHelikaActor::SendHTTPPost(FString url, FString data)
 {
+    if (!_enabled)
+    {
+        UE_LOG(LogTemp, Display, TEXT("Sent Helika Event : %s"), *data);
+        return;
+    }
+
     FString uriBase = _baseUrl + url;
-    FHttpModule& httpModule = FHttpModule::Get();
+    FHttpModule &httpModule = FHttpModule::Get();
     TSharedRef<IHttpRequest, ESPMode::ThreadSafe> pRequest = httpModule.CreateRequest();
 
     pRequest->SetVerb(TEXT("POST"));
@@ -82,25 +79,27 @@ void AHelikaActor::SendHTTPPost(FString url, FString data)
     pRequest->SetContentAsString(RequestContent);
     pRequest->SetURL(uriBase);
     pRequest->OnProcessRequestComplete().BindLambda(
-
         [&](
             FHttpRequestPtr pRequest,
             FHttpResponsePtr pResponse,
-            bool connectedSuccessfully) mutable {
-
-        if (connectedSuccessfully) {
+            bool connectedSuccessfully) mutable
+        {
+            if (connectedSuccessfully)
+            {
 
             ProcessEventTrackResponse(pResponse->GetContentAsString());
-        }
-        else {
-            switch (pRequest->GetStatus()) {
+            }
+            else
+            {
+            switch (pRequest->GetStatus())
+            {
             case EHttpRequestStatus::Failed_ConnectionError:
                 UE_LOG(LogTemp, Error, TEXT("Connection failed."));
             default:
                 UE_LOG(LogTemp, Error, TEXT("Request failed."));
             }
-        }
-    });
+            }
+        });
 
     pRequest->ProcessRequest();
 }
@@ -114,17 +113,16 @@ void AHelikaActor::SendEvent(FHSession helikaEvents)
 {
     helikaEvents.id = _sessionID;
 
-    for (auto& Event : helikaEvents.events)
+    for (auto &Event : helikaEvents.events)
     {
         if (Event.game_id.IsEmpty())
-            Event.game_id = _gameId;
+        Event.game_id = _gameId;
         Event.created_at = FDateTime::UtcNow().ToIso8601();
         Event.event.Add("session_id", _sessionID);
         Event.event.Add("player_id", _playerId);
     }
     FString JSONPayload;
     FJsonObjectConverter::UStructToJsonObjectString(helikaEvents, JSONPayload, 0, 0);
-    UE_LOG(LogTemp, Display, TEXT("Sent Helika Event : %s"), *JSONPayload);
     SendHTTPPost("/game/game-event", JSONPayload);
 }
 
@@ -156,7 +154,5 @@ void AHelikaActor::CreateSession()
     FHSession Fsession;
     Fsession.events = fEventsArray;
 
-    SendEvent(Fsession); 
+    SendEvent(Fsession);
 }
-
-

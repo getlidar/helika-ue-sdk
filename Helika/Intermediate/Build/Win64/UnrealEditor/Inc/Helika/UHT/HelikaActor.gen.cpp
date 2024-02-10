@@ -13,7 +13,7 @@ void EmptyLinkFunctionForGeneratedCodeHelikaActor() {}
 	HELIKA_API UClass* Z_Construct_UClass_AHelikaActor();
 	HELIKA_API UClass* Z_Construct_UClass_AHelikaActor_NoRegister();
 	HELIKA_API UEnum* Z_Construct_UEnum_Helika_HelikaEnvironment();
-	HELIKA_API UScriptStruct* Z_Construct_UScriptStruct_FHEvents();
+	HELIKA_API UScriptStruct* Z_Construct_UScriptStruct_FHEvent();
 	HELIKA_API UScriptStruct* Z_Construct_UScriptStruct_FHSession();
 	UPackage* Z_Construct_UPackage__Script_Helika();
 // End Cross Module References
@@ -72,20 +72,20 @@ void EmptyLinkFunctionForGeneratedCodeHelikaActor() {}
 		}
 		return Z_Registration_Info_UEnum_HelikaEnvironment.InnerSingleton;
 	}
-	static FStructRegistrationInfo Z_Registration_Info_UScriptStruct_HEvents;
-class UScriptStruct* FHEvents::StaticStruct()
+	static FStructRegistrationInfo Z_Registration_Info_UScriptStruct_HEvent;
+class UScriptStruct* FHEvent::StaticStruct()
 {
-	if (!Z_Registration_Info_UScriptStruct_HEvents.OuterSingleton)
+	if (!Z_Registration_Info_UScriptStruct_HEvent.OuterSingleton)
 	{
-		Z_Registration_Info_UScriptStruct_HEvents.OuterSingleton = GetStaticStruct(Z_Construct_UScriptStruct_FHEvents, (UObject*)Z_Construct_UPackage__Script_Helika(), TEXT("HEvents"));
+		Z_Registration_Info_UScriptStruct_HEvent.OuterSingleton = GetStaticStruct(Z_Construct_UScriptStruct_FHEvent, (UObject*)Z_Construct_UPackage__Script_Helika(), TEXT("HEvent"));
 	}
-	return Z_Registration_Info_UScriptStruct_HEvents.OuterSingleton;
+	return Z_Registration_Info_UScriptStruct_HEvent.OuterSingleton;
 }
-template<> HELIKA_API UScriptStruct* StaticStruct<FHEvents>()
+template<> HELIKA_API UScriptStruct* StaticStruct<FHEvent>()
 {
-	return FHEvents::StaticStruct();
+	return FHEvent::StaticStruct();
 }
-	struct Z_Construct_UScriptStruct_FHEvents_Statics
+	struct Z_Construct_UScriptStruct_FHEvent_Statics
 	{
 #if WITH_METADATA
 		static const UECodeGen_Private::FMetaDataPairParam Struct_MetaDataParams[];
@@ -113,73 +113,73 @@ template<> HELIKA_API UScriptStruct* StaticStruct<FHEvents>()
 		static const UECodeGen_Private::FStructParams ReturnStructParams;
 	};
 #if WITH_METADATA
-	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UScriptStruct_FHEvents_Statics::Struct_MetaDataParams[] = {
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UScriptStruct_FHEvent_Statics::Struct_MetaDataParams[] = {
 		{ "BlueprintType", "true" },
 		{ "ModuleRelativePath", "Public/HelikaActor.h" },
 	};
 #endif
-	void* Z_Construct_UScriptStruct_FHEvents_Statics::NewStructOps()
+	void* Z_Construct_UScriptStruct_FHEvent_Statics::NewStructOps()
 	{
-		return (UScriptStruct::ICppStructOps*)new UScriptStruct::TCppStructOps<FHEvents>();
+		return (UScriptStruct::ICppStructOps*)new UScriptStruct::TCppStructOps<FHEvent>();
 	}
 #if WITH_METADATA
-	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UScriptStruct_FHEvents_Statics::NewProp_game_id_MetaData[] = {
-		{ "Category", "HEvents" },
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UScriptStruct_FHEvent_Statics::NewProp_game_id_MetaData[] = {
+		{ "Category", "Helika" },
 		{ "ModuleRelativePath", "Public/HelikaActor.h" },
 	};
 #endif
-	const UECodeGen_Private::FStrPropertyParams Z_Construct_UScriptStruct_FHEvents_Statics::NewProp_game_id = { "game_id", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Str, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FHEvents, game_id), METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FHEvents_Statics::NewProp_game_id_MetaData), Z_Construct_UScriptStruct_FHEvents_Statics::NewProp_game_id_MetaData) };
+	const UECodeGen_Private::FStrPropertyParams Z_Construct_UScriptStruct_FHEvent_Statics::NewProp_game_id = { "game_id", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Str, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FHEvent, game_id), METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FHEvent_Statics::NewProp_game_id_MetaData), Z_Construct_UScriptStruct_FHEvent_Statics::NewProp_game_id_MetaData) };
 #if WITH_METADATA
-	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UScriptStruct_FHEvents_Statics::NewProp_event_type_MetaData[] = {
-		{ "Category", "HEvents" },
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UScriptStruct_FHEvent_Statics::NewProp_event_type_MetaData[] = {
+		{ "Category", "Helika" },
 		{ "ModuleRelativePath", "Public/HelikaActor.h" },
 	};
 #endif
-	const UECodeGen_Private::FStrPropertyParams Z_Construct_UScriptStruct_FHEvents_Statics::NewProp_event_type = { "event_type", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Str, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FHEvents, event_type), METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FHEvents_Statics::NewProp_event_type_MetaData), Z_Construct_UScriptStruct_FHEvents_Statics::NewProp_event_type_MetaData) };
-	const UECodeGen_Private::FStrPropertyParams Z_Construct_UScriptStruct_FHEvents_Statics::NewProp_event_ValueProp = { "event", nullptr, (EPropertyFlags)0x0000000000000001, UECodeGen_Private::EPropertyGenFlags::Str, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, 1, METADATA_PARAMS(0, nullptr) };
-	const UECodeGen_Private::FStrPropertyParams Z_Construct_UScriptStruct_FHEvents_Statics::NewProp_event_Key_KeyProp = { "event_Key", nullptr, (EPropertyFlags)0x0000000000000001, UECodeGen_Private::EPropertyGenFlags::Str, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, 0, METADATA_PARAMS(0, nullptr) };
+	const UECodeGen_Private::FStrPropertyParams Z_Construct_UScriptStruct_FHEvent_Statics::NewProp_event_type = { "event_type", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Str, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FHEvent, event_type), METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FHEvent_Statics::NewProp_event_type_MetaData), Z_Construct_UScriptStruct_FHEvent_Statics::NewProp_event_type_MetaData) };
+	const UECodeGen_Private::FStrPropertyParams Z_Construct_UScriptStruct_FHEvent_Statics::NewProp_event_ValueProp = { "event", nullptr, (EPropertyFlags)0x0000000000000001, UECodeGen_Private::EPropertyGenFlags::Str, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, 1, METADATA_PARAMS(0, nullptr) };
+	const UECodeGen_Private::FStrPropertyParams Z_Construct_UScriptStruct_FHEvent_Statics::NewProp_event_Key_KeyProp = { "event_Key", nullptr, (EPropertyFlags)0x0000000000000001, UECodeGen_Private::EPropertyGenFlags::Str, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, 0, METADATA_PARAMS(0, nullptr) };
 #if WITH_METADATA
-	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UScriptStruct_FHEvents_Statics::NewProp_event_MetaData[] = {
-		{ "Category", "HEvents" },
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UScriptStruct_FHEvent_Statics::NewProp_event_MetaData[] = {
+		{ "Category", "Helika" },
 		{ "ModuleRelativePath", "Public/HelikaActor.h" },
 	};
 #endif
-	const UECodeGen_Private::FMapPropertyParams Z_Construct_UScriptStruct_FHEvents_Statics::NewProp_event = { "event", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Map, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FHEvents, event), EMapPropertyFlags::None, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FHEvents_Statics::NewProp_event_MetaData), Z_Construct_UScriptStruct_FHEvents_Statics::NewProp_event_MetaData) };
+	const UECodeGen_Private::FMapPropertyParams Z_Construct_UScriptStruct_FHEvent_Statics::NewProp_event = { "event", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Map, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FHEvent, event), EMapPropertyFlags::None, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FHEvent_Statics::NewProp_event_MetaData), Z_Construct_UScriptStruct_FHEvent_Statics::NewProp_event_MetaData) };
 #if WITH_METADATA
-	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UScriptStruct_FHEvents_Statics::NewProp_created_at_MetaData[] = {
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UScriptStruct_FHEvent_Statics::NewProp_created_at_MetaData[] = {
 		{ "ModuleRelativePath", "Public/HelikaActor.h" },
 	};
 #endif
-	const UECodeGen_Private::FStrPropertyParams Z_Construct_UScriptStruct_FHEvents_Statics::NewProp_created_at = { "created_at", nullptr, (EPropertyFlags)0x0010000000000000, UECodeGen_Private::EPropertyGenFlags::Str, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FHEvents, created_at), METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FHEvents_Statics::NewProp_created_at_MetaData), Z_Construct_UScriptStruct_FHEvents_Statics::NewProp_created_at_MetaData) };
-	const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UScriptStruct_FHEvents_Statics::PropPointers[] = {
-		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FHEvents_Statics::NewProp_game_id,
-		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FHEvents_Statics::NewProp_event_type,
-		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FHEvents_Statics::NewProp_event_ValueProp,
-		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FHEvents_Statics::NewProp_event_Key_KeyProp,
-		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FHEvents_Statics::NewProp_event,
-		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FHEvents_Statics::NewProp_created_at,
+	const UECodeGen_Private::FStrPropertyParams Z_Construct_UScriptStruct_FHEvent_Statics::NewProp_created_at = { "created_at", nullptr, (EPropertyFlags)0x0010000000000000, UECodeGen_Private::EPropertyGenFlags::Str, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FHEvent, created_at), METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FHEvent_Statics::NewProp_created_at_MetaData), Z_Construct_UScriptStruct_FHEvent_Statics::NewProp_created_at_MetaData) };
+	const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UScriptStruct_FHEvent_Statics::PropPointers[] = {
+		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FHEvent_Statics::NewProp_game_id,
+		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FHEvent_Statics::NewProp_event_type,
+		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FHEvent_Statics::NewProp_event_ValueProp,
+		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FHEvent_Statics::NewProp_event_Key_KeyProp,
+		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FHEvent_Statics::NewProp_event,
+		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FHEvent_Statics::NewProp_created_at,
 	};
-	const UECodeGen_Private::FStructParams Z_Construct_UScriptStruct_FHEvents_Statics::ReturnStructParams = {
+	const UECodeGen_Private::FStructParams Z_Construct_UScriptStruct_FHEvent_Statics::ReturnStructParams = {
 		(UObject* (*)())Z_Construct_UPackage__Script_Helika,
 		nullptr,
 		&NewStructOps,
-		"HEvents",
-		Z_Construct_UScriptStruct_FHEvents_Statics::PropPointers,
-		UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FHEvents_Statics::PropPointers),
-		sizeof(FHEvents),
-		alignof(FHEvents),
+		"HEvent",
+		Z_Construct_UScriptStruct_FHEvent_Statics::PropPointers,
+		UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FHEvent_Statics::PropPointers),
+		sizeof(FHEvent),
+		alignof(FHEvent),
 		RF_Public|RF_Transient|RF_MarkAsNative,
 		EStructFlags(0x00000001),
-		METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FHEvents_Statics::Struct_MetaDataParams), Z_Construct_UScriptStruct_FHEvents_Statics::Struct_MetaDataParams)
+		METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FHEvent_Statics::Struct_MetaDataParams), Z_Construct_UScriptStruct_FHEvent_Statics::Struct_MetaDataParams)
 	};
-	static_assert(UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FHEvents_Statics::PropPointers) < 2048);
-	UScriptStruct* Z_Construct_UScriptStruct_FHEvents()
+	static_assert(UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FHEvent_Statics::PropPointers) < 2048);
+	UScriptStruct* Z_Construct_UScriptStruct_FHEvent()
 	{
-		if (!Z_Registration_Info_UScriptStruct_HEvents.InnerSingleton)
+		if (!Z_Registration_Info_UScriptStruct_HEvent.InnerSingleton)
 		{
-			UECodeGen_Private::ConstructUScriptStruct(Z_Registration_Info_UScriptStruct_HEvents.InnerSingleton, Z_Construct_UScriptStruct_FHEvents_Statics::ReturnStructParams);
+			UECodeGen_Private::ConstructUScriptStruct(Z_Registration_Info_UScriptStruct_HEvent.InnerSingleton, Z_Construct_UScriptStruct_FHEvent_Statics::ReturnStructParams);
 		}
-		return Z_Registration_Info_UScriptStruct_HEvents.InnerSingleton;
+		return Z_Registration_Info_UScriptStruct_HEvent.InnerSingleton;
 	}
 	static FStructRegistrationInfo Z_Registration_Info_UScriptStruct_HSession;
 class UScriptStruct* FHSession::StaticStruct()
@@ -228,14 +228,14 @@ template<> HELIKA_API UScriptStruct* StaticStruct<FHSession>()
 	};
 #endif
 	const UECodeGen_Private::FStrPropertyParams Z_Construct_UScriptStruct_FHSession_Statics::NewProp_id = { "id", nullptr, (EPropertyFlags)0x0010000000000000, UECodeGen_Private::EPropertyGenFlags::Str, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FHSession, id), METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FHSession_Statics::NewProp_id_MetaData), Z_Construct_UScriptStruct_FHSession_Statics::NewProp_id_MetaData) };
-	const UECodeGen_Private::FStructPropertyParams Z_Construct_UScriptStruct_FHSession_Statics::NewProp_events_Inner = { "events", nullptr, (EPropertyFlags)0x0000000000000000, UECodeGen_Private::EPropertyGenFlags::Struct, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, 0, Z_Construct_UScriptStruct_FHEvents, METADATA_PARAMS(0, nullptr) }; // 1766944434
+	const UECodeGen_Private::FStructPropertyParams Z_Construct_UScriptStruct_FHSession_Statics::NewProp_events_Inner = { "events", nullptr, (EPropertyFlags)0x0000000000000000, UECodeGen_Private::EPropertyGenFlags::Struct, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, 0, Z_Construct_UScriptStruct_FHEvent, METADATA_PARAMS(0, nullptr) }; // 2654964001
 #if WITH_METADATA
 	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UScriptStruct_FHSession_Statics::NewProp_events_MetaData[] = {
-		{ "Category", "HSession" },
+		{ "Category", "Helika" },
 		{ "ModuleRelativePath", "Public/HelikaActor.h" },
 	};
 #endif
-	const UECodeGen_Private::FArrayPropertyParams Z_Construct_UScriptStruct_FHSession_Statics::NewProp_events = { "events", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Array, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FHSession, events), EArrayPropertyFlags::None, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FHSession_Statics::NewProp_events_MetaData), Z_Construct_UScriptStruct_FHSession_Statics::NewProp_events_MetaData) }; // 1766944434
+	const UECodeGen_Private::FArrayPropertyParams Z_Construct_UScriptStruct_FHSession_Statics::NewProp_events = { "events", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Array, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FHSession, events), EArrayPropertyFlags::None, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FHSession_Statics::NewProp_events_MetaData), Z_Construct_UScriptStruct_FHSession_Statics::NewProp_events_MetaData) }; // 2654964001
 	const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UScriptStruct_FHSession_Statics::PropPointers[] = {
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FHSession_Statics::NewProp_id,
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FHSession_Statics::NewProp_events_Inner,
@@ -292,7 +292,7 @@ template<> HELIKA_API UScriptStruct* StaticStruct<FHSession>()
 #endif
 		static const UECodeGen_Private::FFunctionParams FuncParams;
 	};
-	const UECodeGen_Private::FStructPropertyParams Z_Construct_UFunction_AHelikaActor_SendEvent_Statics::NewProp_helikaEvents = { "helikaEvents", nullptr, (EPropertyFlags)0x0010000000000080, UECodeGen_Private::EPropertyGenFlags::Struct, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(HelikaActor_eventSendEvent_Parms, helikaEvents), Z_Construct_UScriptStruct_FHSession, METADATA_PARAMS(0, nullptr) }; // 3048710806
+	const UECodeGen_Private::FStructPropertyParams Z_Construct_UFunction_AHelikaActor_SendEvent_Statics::NewProp_helikaEvents = { "helikaEvents", nullptr, (EPropertyFlags)0x0010000000000080, UECodeGen_Private::EPropertyGenFlags::Struct, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(HelikaActor_eventSendEvent_Parms, helikaEvents), Z_Construct_UScriptStruct_FHSession, METADATA_PARAMS(0, nullptr) }; // 428439661
 	const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UFunction_AHelikaActor_SendEvent_Statics::PropPointers[] = {
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UFunction_AHelikaActor_SendEvent_Statics::NewProp_helikaEvents,
 	};
@@ -358,7 +358,7 @@ template<> HELIKA_API UScriptStruct* StaticStruct<FHSession>()
 	};
 	static_assert(UE_ARRAY_COUNT(Z_Construct_UClass_AHelikaActor_Statics::DependentSingletons) < 16);
 	const FClassFunctionLinkInfo Z_Construct_UClass_AHelikaActor_Statics::FuncInfo[] = {
-		{ &Z_Construct_UFunction_AHelikaActor_SendEvent, "SendEvent" }, // 3188119904
+		{ &Z_Construct_UFunction_AHelikaActor_SendEvent, "SendEvent" }, // 808677434
 	};
 	static_assert(UE_ARRAY_COUNT(Z_Construct_UClass_AHelikaActor_Statics::FuncInfo) < 2048);
 #if WITH_METADATA
@@ -448,24 +448,24 @@ template<> HELIKA_API UScriptStruct* StaticStruct<FHSession>()
 	}
 	DEFINE_VTABLE_PTR_HELPER_CTOR(AHelikaActor);
 	AHelikaActor::~AHelikaActor() {}
-	struct Z_CompiledInDeferFile_FID_Users_hamza_Documents_Unreal_Projects_HelikaPoject_Plugins_Helika_Source_Helika_Public_HelikaActor_h_Statics
+	struct Z_CompiledInDeferFile_FID_Helika_helika_ue_sdk_Helika_HostProject_Plugins_Helika_Source_Helika_Public_HelikaActor_h_Statics
 	{
 		static const FEnumRegisterCompiledInInfo EnumInfo[];
 		static const FStructRegisterCompiledInInfo ScriptStructInfo[];
 		static const FClassRegisterCompiledInInfo ClassInfo[];
 	};
-	const FEnumRegisterCompiledInInfo Z_CompiledInDeferFile_FID_Users_hamza_Documents_Unreal_Projects_HelikaPoject_Plugins_Helika_Source_Helika_Public_HelikaActor_h_Statics::EnumInfo[] = {
+	const FEnumRegisterCompiledInInfo Z_CompiledInDeferFile_FID_Helika_helika_ue_sdk_Helika_HostProject_Plugins_Helika_Source_Helika_Public_HelikaActor_h_Statics::EnumInfo[] = {
 		{ HelikaEnvironment_StaticEnum, TEXT("HelikaEnvironment"), &Z_Registration_Info_UEnum_HelikaEnvironment, CONSTRUCT_RELOAD_VERSION_INFO(FEnumReloadVersionInfo, 922295950U) },
 	};
-	const FStructRegisterCompiledInInfo Z_CompiledInDeferFile_FID_Users_hamza_Documents_Unreal_Projects_HelikaPoject_Plugins_Helika_Source_Helika_Public_HelikaActor_h_Statics::ScriptStructInfo[] = {
-		{ FHEvents::StaticStruct, Z_Construct_UScriptStruct_FHEvents_Statics::NewStructOps, TEXT("HEvents"), &Z_Registration_Info_UScriptStruct_HEvents, CONSTRUCT_RELOAD_VERSION_INFO(FStructReloadVersionInfo, sizeof(FHEvents), 1766944434U) },
-		{ FHSession::StaticStruct, Z_Construct_UScriptStruct_FHSession_Statics::NewStructOps, TEXT("HSession"), &Z_Registration_Info_UScriptStruct_HSession, CONSTRUCT_RELOAD_VERSION_INFO(FStructReloadVersionInfo, sizeof(FHSession), 3048710806U) },
+	const FStructRegisterCompiledInInfo Z_CompiledInDeferFile_FID_Helika_helika_ue_sdk_Helika_HostProject_Plugins_Helika_Source_Helika_Public_HelikaActor_h_Statics::ScriptStructInfo[] = {
+		{ FHEvent::StaticStruct, Z_Construct_UScriptStruct_FHEvent_Statics::NewStructOps, TEXT("HEvent"), &Z_Registration_Info_UScriptStruct_HEvent, CONSTRUCT_RELOAD_VERSION_INFO(FStructReloadVersionInfo, sizeof(FHEvent), 2654964001U) },
+		{ FHSession::StaticStruct, Z_Construct_UScriptStruct_FHSession_Statics::NewStructOps, TEXT("HSession"), &Z_Registration_Info_UScriptStruct_HSession, CONSTRUCT_RELOAD_VERSION_INFO(FStructReloadVersionInfo, sizeof(FHSession), 428439661U) },
 	};
-	const FClassRegisterCompiledInInfo Z_CompiledInDeferFile_FID_Users_hamza_Documents_Unreal_Projects_HelikaPoject_Plugins_Helika_Source_Helika_Public_HelikaActor_h_Statics::ClassInfo[] = {
-		{ Z_Construct_UClass_AHelikaActor, AHelikaActor::StaticClass, TEXT("AHelikaActor"), &Z_Registration_Info_UClass_AHelikaActor, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(AHelikaActor), 2157141202U) },
+	const FClassRegisterCompiledInInfo Z_CompiledInDeferFile_FID_Helika_helika_ue_sdk_Helika_HostProject_Plugins_Helika_Source_Helika_Public_HelikaActor_h_Statics::ClassInfo[] = {
+		{ Z_Construct_UClass_AHelikaActor, AHelikaActor::StaticClass, TEXT("AHelikaActor"), &Z_Registration_Info_UClass_AHelikaActor, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(AHelikaActor), 3592166620U) },
 	};
-	static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_Users_hamza_Documents_Unreal_Projects_HelikaPoject_Plugins_Helika_Source_Helika_Public_HelikaActor_h_1741119576(TEXT("/Script/Helika"),
-		Z_CompiledInDeferFile_FID_Users_hamza_Documents_Unreal_Projects_HelikaPoject_Plugins_Helika_Source_Helika_Public_HelikaActor_h_Statics::ClassInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_Users_hamza_Documents_Unreal_Projects_HelikaPoject_Plugins_Helika_Source_Helika_Public_HelikaActor_h_Statics::ClassInfo),
-		Z_CompiledInDeferFile_FID_Users_hamza_Documents_Unreal_Projects_HelikaPoject_Plugins_Helika_Source_Helika_Public_HelikaActor_h_Statics::ScriptStructInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_Users_hamza_Documents_Unreal_Projects_HelikaPoject_Plugins_Helika_Source_Helika_Public_HelikaActor_h_Statics::ScriptStructInfo),
-		Z_CompiledInDeferFile_FID_Users_hamza_Documents_Unreal_Projects_HelikaPoject_Plugins_Helika_Source_Helika_Public_HelikaActor_h_Statics::EnumInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_Users_hamza_Documents_Unreal_Projects_HelikaPoject_Plugins_Helika_Source_Helika_Public_HelikaActor_h_Statics::EnumInfo));
+	static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_Helika_helika_ue_sdk_Helika_HostProject_Plugins_Helika_Source_Helika_Public_HelikaActor_h_319821172(TEXT("/Script/Helika"),
+		Z_CompiledInDeferFile_FID_Helika_helika_ue_sdk_Helika_HostProject_Plugins_Helika_Source_Helika_Public_HelikaActor_h_Statics::ClassInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_Helika_helika_ue_sdk_Helika_HostProject_Plugins_Helika_Source_Helika_Public_HelikaActor_h_Statics::ClassInfo),
+		Z_CompiledInDeferFile_FID_Helika_helika_ue_sdk_Helika_HostProject_Plugins_Helika_Source_Helika_Public_HelikaActor_h_Statics::ScriptStructInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_Helika_helika_ue_sdk_Helika_HostProject_Plugins_Helika_Source_Helika_Public_HelikaActor_h_Statics::ScriptStructInfo),
+		Z_CompiledInDeferFile_FID_Helika_helika_ue_sdk_Helika_HostProject_Plugins_Helika_Source_Helika_Public_HelikaActor_h_Statics::EnumInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_Helika_helika_ue_sdk_Helika_HostProject_Plugins_Helika_Source_Helika_Public_HelikaActor_h_Statics::EnumInfo));
 PRAGMA_ENABLE_DEPRECATION_WARNINGS

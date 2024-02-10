@@ -17,13 +17,13 @@ void EmptyLinkFunctionForGeneratedCodeHelika_init() {}
 				nullptr,
 				0,
 				PKG_CompiledIn | 0x00000000,
-				0x5377FD86,
-				0x843E5D58,
+				0xD63042DC,
+				0xF66936AF,
 				METADATA_PARAMS(0, nullptr)
 			};
 			UECodeGen_Private::ConstructUPackage(Z_Registration_Info_UPackage__Script_Helika.OuterSingleton, PackageParams);
 		}
 		return Z_Registration_Info_UPackage__Script_Helika.OuterSingleton;
 	}
-	static FRegisterCompiledInInfo Z_CompiledInDeferPackage_UPackage__Script_Helika(Z_Construct_UPackage__Script_Helika, TEXT("/Script/Helika"), Z_Registration_Info_UPackage__Script_Helika, CONSTRUCT_RELOAD_VERSION_INFO(FPackageReloadVersionInfo, 0x5377FD86, 0x843E5D58));
+	static FRegisterCompiledInInfo Z_CompiledInDeferPackage_UPackage__Script_Helika(Z_Construct_UPackage__Script_Helika, TEXT("/Script/Helika"), Z_Registration_Info_UPackage__Script_Helika, CONSTRUCT_RELOAD_VERSION_INFO(FPackageReloadVersionInfo, 0xD63042DC, 0xF66936AF));
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
