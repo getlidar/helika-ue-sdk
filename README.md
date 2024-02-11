@@ -40,5 +40,6 @@ Steps to Run Helika Events
 2. Now select BP_HelikaActor in your level and add in the required config values in Details Menu.
 You'll need to set the Api Key, Game ID and set the Helika Env to either Localhost, Develop, or Production.
 You can also programmatically set the Player ID at any time. It is simply appended to all sent events.
+
 ![image](https://github.com/getlidar/helika-ue-sdk/assets/35335528/a978b536-3837-480e-91ac-d862438990cc)
 
