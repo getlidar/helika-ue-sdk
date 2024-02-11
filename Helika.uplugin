@@ -1,0 +1,25 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "Helika",
+	"Description": "The Helika SDK is a powerful toolkit for integrating Helika services into your applications. With the Helika SDK, you can easily leverage the full capabilities of Helika and build robust and scalable solutions.",
+	"Category": "Other",
+	"CreatedBy": "Helika",
+	"CreatedByURL": "https://www.helika.io",
+	"DocsURL": "https://docs.helika.io/docs/getting-started",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"Installed": true,
+	"Modules": [
+		{
+			"Name": "Helika",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [
+				"Win64"
+			]
+		}
+	]
+}
