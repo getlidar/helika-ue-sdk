@@ -1,5 +1,7 @@
 
 #include "HelikaActor.h"
+#include "Kismet/GameplayStatics.h"
+#include "GenericPlatform/GenericPlatformMisc.h"
 
 AHelikaActor::AHelikaActor()
 {
@@ -137,6 +139,9 @@ void AHelikaActor::CreateSession()
     fEvent.event.Add("sdk_class", "HelikaActor");
     fEvent.event.Add("session_id", _sessionID);
     fEvent.event.Add("event_sub_type", "session_created");
+    fEvent.event.Add("os", UGameplayStatics::GetPlatformName());
+    fEvent.event.Add("device_model", FGenericPlatformMisc::GetDeviceMakeAndModel());
+    fEvent.event.Add("device_ue_unique_identifier", FGenericPlatformMisc::GetDeviceId());
 
     // Todo: Add missing if applicable
     // fEvent.event.Add("sdk_platform", "");
