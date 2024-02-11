@@ -54,3 +54,6 @@ Session.vim
 
 # Visual Studio
 .vs
+
+# Others
+!*.md

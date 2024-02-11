@@ -6,11 +6,10 @@
 	"Description": "The Helika SDK is a powerful toolkit for integrating Helika services into your applications. With the Helika SDK, you can easily leverage the full capabilities of Helika and build robust and scalable solutions.",
 	"Category": "Other",
 	"CreatedBy": "Helika",
-	"CreatedByURL": "",
-	"DocsURL": "",
+	"CreatedByURL": "https://www.helika.io",
+	"DocsURL": "https://docs.helika.io/docs/getting-started",
 	"MarketplaceURL": "",
 	"SupportURL": "",
-	"EngineVersion": "5.3.0",
 	"CanContainContent": true,
 	"Installed": true,
 	"Modules": [
