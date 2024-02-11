@@ -3,29 +3,29 @@
 
 AHelikaActor::AHelikaActor()
 {
-  PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.bCanEverTick = true;
 }
 
 void AHelikaActor::BeginPlay()
 {
-  Super::BeginPlay();
-  _playerId = playerId;
-  Init(apiKey, gameId, helikaEnv, sendingEvents);
+    Super::BeginPlay();
+    _playerId = playerId;
+    Init(apiKey, gameId, helikaEnv, sendingEvents);
 }
 
 FString AHelikaActor::ConvertUrl(HelikaEnvironment baseUrl)
 {
-  switch (baseUrl)
-  {
-  case HelikaEnvironment::Production:
-    return "https://api.helika.io/v1";
-  case HelikaEnvironment::Develop:
-    return "https://api-stage.helika.io/v1";
-  case HelikaEnvironment::Localhost:
-    return "http://localhost:8181/v1";
-  default:
-    return "http://localhost:8181/v1";
-  }
+    switch (baseUrl)
+    {
+    case HelikaEnvironment::Production:
+        return "https://api.helika.io/v1";
+    case HelikaEnvironment::Develop:
+        return "https://api-stage.helika.io/v1";
+    case HelikaEnvironment::Localhost:
+        return "http://localhost:8181/v1";
+    default:
+        return "http://localhost:8181/v1";
+    }
 }
 
 void AHelikaActor::Init(FString apiKeyIn, FString gameIdIN, HelikaEnvironment env, bool enabled)
