@@ -35,6 +35,7 @@ The plugin is now installed and enabled in your Unreal Engine project.
 Steps to Run Helika Events
 
 1.After installing the plugin, Add BP_HelikaActor to your level From All->Plugins->Helika Content.
+
 ![image](https://github.com/getlidar/helika-ue-sdk/assets/35335528/dba90961-1d64-422a-b35c-91d69dc83507)
 
 2. Now select BP_HelikaActor in your level and add in the required config values in Details Menu.
@@ -42,4 +43,9 @@ You'll need to set the Api Key, Game ID and set the Helika Env to either Localho
 You can also programmatically set the Player ID at any time. It is simply appended to all sent events.
 
 ![image](https://github.com/getlidar/helika-ue-sdk/assets/35335528/a978b536-3837-480e-91ac-d862438990cc)
+
+3.Get Reference to BP_HelikaActor From your Level and Call "Send Event" Function with you'r Custom event Data to send event to Helika.
+
+![image](https://github.com/getlidar/helika-ue-sdk/assets/35335528/ad962789-65d6-474e-b4db-34707b00740d)
+
 
