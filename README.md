@@ -9,8 +9,6 @@ Regardless of technical or analytical expertise, studios can double down on what
 ## Unreal Engine SDK
 The Helika UE SDK mirrors the functionalities of the Web SDK, catering specifically to UE game developers. This integration facilitates the seamless inclusion of Helika services into your games. By incorporating the Helika UE SDK, you gain effortless access to the complete range of Helika capabilities, empowering you to construct robust and scalable solutions with ease.
 
-Please head to our [docs](https://docs.helika.io/docs/helika-unreal-sdk) for more details.
-
 Steps to Install Helika Plugin
 
 Step 1: Clone the Plugin Repository
