@@ -30,6 +30,15 @@ FString AHelikaActor::ConvertUrl(HelikaEnvironment baseUrl)
     }
 }
 
+FString GetLocalIPAddress()  
+{  
+    FString LocalIP;  
+    FIPv4Address IP;  
+    FIPv4Address::Parse(FIPv4Address::GetLocalHostAddr(*GLog, IP).ToString(), IP);  
+    LocalIP = IP.ToString();  
+    return LocalIP;  
+} 
+
 void AHelikaActor::Init(FString apiKeyIn, FString gameIdIN, HelikaEnvironment env, bool enabled)
 {
     if (_isInitialized)
@@ -50,7 +59,23 @@ void AHelikaActor::Init(FString apiKeyIn, FString gameIdIN, HelikaEnvironment en
         return;
     }
 
-    _helikaApiKey = apiKeyIn;
+    TArray<FString> apiKeys;  
+    apiKeyIn.ParseIntoArray(apiKeys, TEXT("."), true);  
+
+    // Check the length of the apiKeys array  
+    if (apiKeys.Num() < 1 || apiKeys.Num() > 2)  
+    {  
+        UE_LOG(LogTemp, Error, TEXT("Invalid Api Key"));
+        return;  
+    }  
+
+    // Assign the API keys  
+    _helikaApiKey = apiKeys[0];  
+
+    if (apiKeys.Num() == 2)  
+    {  
+        _kochavaApiKey = apiKeys[1];  
+    }  
     _gameId = gameIdIN;
     _baseUrl = ConvertUrl(env);
     _sessionID = FGuid::NewGuid().ToString();
@@ -59,6 +84,7 @@ void AHelikaActor::Init(FString apiKeyIn, FString gameIdIN, HelikaEnvironment en
     _enabled = env != HelikaEnvironment::Localhost ? enabled : false;
 
     CreateSession();
+    SendKochavaInstallEvent();
 }
 
 void AHelikaActor::SendHTTPPost(FString url, FString data)
@@ -128,6 +154,22 @@ void AHelikaActor::SendEvent(FHSession helikaEvents)
     SendHTTPPost("/game/game-event", JSONPayload);
 }
 
+void AHelikaActor::SendKochavaEvent(FString action)
+{
+    FKochavaEvent fKochavaEvent;
+    FDeviceData fDeviceData;
+    
+    fDeviceData.origination_ip = GetLocalIPAddress();
+
+    fKochavaEvent.action = action;
+    fKochavaEvent.kochava_app_id = _kochavaApiKey;
+    fKochavaEvent.kochava_device_id = FGenericPlatformMisc::GetDeviceId();
+    fKochavaEvent.data = fDeviceData;
+
+    FJsonObjectConverter::UStructToJsonObjectString(fKochavaEvent, JSONPayload, 0, 0);
+    SendHTTPPost("/game/kochava-event", JSONPayload);
+}
+
 void AHelikaActor::CreateSession()
 {
     FHEvent fEvent;
@@ -161,3 +203,4 @@ void AHelikaActor::CreateSession()
 
     SendEvent(Fsession);
 }
+

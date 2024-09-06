@@ -13,6 +13,8 @@
 #include "Misc/DateTime.h"
 #include "Containers/UnrealString.h"
 #include "HelikaActor.generated.h"
+#include "Sockets.h"  
+#include "SocketSubsystem.h"  
 
 UENUM(BlueprintType)
 enum class HelikaEnvironment : uint8
@@ -52,6 +54,39 @@ struct FHSession
     TArray<FHEvent> events;
 };
 
+USTRUCT(BlueprintType)  
+struct FDeviceData  
+{  
+    GENERATED_BODY()   
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DeviceData")  
+    FString app_version;  
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DeviceData")  
+    FString origination_ip;  
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DeviceData")  
+    TMap<Fstring, FString> device_ids;
+};  
+
+USTRUCT(BlueprintType)  
+struct FKochavaEvent  
+{  
+    GENERATED_BODY()  
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "KochavaEvent")  
+    FString action;  
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "KochavaEvent")  
+    FString kochava_app_id;  
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "KochavaEvent")  
+    FString kochava_device_id;  
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "KochavaEvent")  
+    FDevice data; 
+};  
+
 UCLASS()
 class HELIKA_API AHelikaActor : public AActor
 {
@@ -89,6 +124,8 @@ public:
 private:
     FString _helikaApiKey;
 
+    FString _kochavaApiKey;
+
     void SendHTTPPost(FString url, FString data);
 
     void ProcessEventTrackResponse(FString data);
@@ -96,6 +133,8 @@ private:
     void CreateSession();
 
     FString ConvertUrl(HelikaEnvironment baseUrl);
+
+    FString GetLocalIPAddress();
 
 protected:
     FString _baseUrl;
