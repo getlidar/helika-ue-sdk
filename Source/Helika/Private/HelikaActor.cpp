@@ -15,6 +15,11 @@ void AHelikaActor::BeginPlay()
     Init(apiKey, gameId, helikaEnv, sendingEvents);
 }
 
+void AHelikaActor::SetPlayerID(FString InPlayerID)
+{
+    playerId = InPlayerID;
+}
+
 FString AHelikaActor::ConvertUrl(HelikaEnvironment baseUrl)
 {
     switch (baseUrl)
@@ -89,17 +94,17 @@ void AHelikaActor::SendHTTPPost(FString url, FString data)
             if (connectedSuccessfully)
             {
 
-            ProcessEventTrackResponse(pResponse->GetContentAsString());
+                ProcessEventTrackResponse(pResponse->GetContentAsString());
             }
             else
             {
-            switch (pRequest->GetStatus())
-            {
-            case EHttpRequestStatus::Failed_ConnectionError:
-                UE_LOG(LogTemp, Error, TEXT("Connection failed."));
-            default:
-                UE_LOG(LogTemp, Error, TEXT("Request failed."));
-            }
+                switch (pRequest->GetStatus())
+                {
+                case EHttpRequestStatus::Failed_ConnectionError:
+                    UE_LOG(LogTemp, Error, TEXT("Connection failed."));
+                default:
+                    UE_LOG(LogTemp, Error, TEXT("Request failed."));
+                }
             }
         });
 
@@ -118,7 +123,7 @@ void AHelikaActor::SendEvent(FHSession helikaEvents)
     for (auto &Event : helikaEvents.events)
     {
         if (Event.game_id.IsEmpty())
-        Event.game_id = _gameId;
+            Event.game_id = _gameId;
         Event.created_at = FDateTime::UtcNow().ToIso8601();
         Event.event.Add("session_id", _sessionID);
         Event.event.Add("player_id", _playerId);
@@ -134,14 +139,14 @@ void AHelikaActor::CreateSession()
     fEvent.event_type = "session_created";
 
     // Todo: Turn these into static variables
-    fEvent.event.Add("sdk_name", "Unreal");
-    fEvent.event.Add("sdk_version", "0.1.0");
-    fEvent.event.Add("sdk_class", "HelikaActor");
+    fEvent.event.Add("sdk_name", _sdk_name);
+    fEvent.event.Add("sdk_version", _sdk_version);
+    fEvent.event.Add("sdk_class", _sdk_class);
     fEvent.event.Add("session_id", _sessionID);
     fEvent.event.Add("event_sub_type", "session_created");
     fEvent.event.Add("os", UGameplayStatics::GetPlatformName());
     fEvent.event.Add("device_model", FGenericPlatformMisc::GetDeviceMakeAndModel());
-    fEvent.event.Add("device_ue_unique_identifier", FGenericPlatformMisc::GetDeviceId());
+    fEvent.event.Add("device_ue_unique_identifier", GetDeviceUniqueIdentifier());
 
     // Todo: Add missing if applicable
     // fEvent.event.Add("sdk_platform", "");
@@ -160,4 +165,55 @@ void AHelikaActor::CreateSession()
     Fsession.events = fEventsArray;
 
     SendEvent(Fsession);
+}
+
+EPlatformType AHelikaActor::GetPlatformType()
+{
+#if PLATFORM_WINDOWS
+    return EPlatformType::PT_WINDOWS;
+#elif PLATFORM_IOS
+    return EPlatformType::PT_IOS;
+#elif PLATFORM_MAC
+    return EPlatformType::PT_MAC;
+#elif PLATFORM_ANDROID
+    return EPlatformType::PT_ANDROID;
+#elif PLATFORM_LINUX
+    return EPlatformType::PT_LINUX;
+#else
+    ensureMsgf(false, TEXT("Platform unknown"));
+    return EPlatformType::PT_UNKNOWN;
+#endif
+}
+
+FString AHelikaActor::GetPlatformName()
+{
+#if PLATFORM_WINDOWS
+    return FString(TEXT("Windows"));
+#elif PLATFORM_IOS
+    return FString(TEXT("IOS"));
+#elif PLATFORM_MAC
+    return FString(TEXT("Mac"));
+#elif PLATFORM_ANDROID
+    return FString(TEXT("Android"));
+#elif PLATFORM_LINUX
+    return FString(TEXT("Linux"));
+#else
+    ensureMsgf(false, TEXT("Platform unknown"));
+    return FString(TEXT("Unknown"));
+#endif
+}
+
+///
+/// In case of Windows and Mac we have access to operating system ID
+/// In case of Android and iOS we have access to device ID
+/// @return
+FString AHelikaActor::GetDeviceUniqueIdentifier()
+{
+#if PLATFORM_WINDOWS || PLATFORM_MAC
+    return FPlatformMisc::GetOperatingSystemId();
+#elif PLATFORM_ANDROID || PLATFORM_IOS
+    return FPlatformMisc::GetDeviceId();
+#else
+    return FString();
+#endif
 }

@@ -22,6 +22,18 @@ enum class HelikaEnvironment : uint8
     Production
 };
 
+UENUM(BlueprintType)
+enum class EPlatformType : uint8
+{
+    PT_DEFAULT UMETA(DisplayName = "Default"),
+    PT_WINDOWS UMETA(DisplayName = "Windows"),
+    PT_MAC UMETA(DisplayName = "Mac"),
+    PT_LINUX UMETA(DisplayName = "Linux"),
+    PT_IOS UMETA(DisplayName = "IOS"),
+    PT_ANDROID UMETA(DisplayName = "Android"),
+    PT_UNKNOWN UMETA(DisplayName = "Unknown")
+};
+
 USTRUCT(BlueprintType)
 struct FHEvent
 {
@@ -84,10 +96,30 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Helika")
     void SendEvent(FHSession helikaEvents);
 
-    
+    // Sets the player ID
+    UFUNCTION(BlueprintCallable, Category = "Helika")
+    void SetPlayerID(FString InPlayerID);
+
+    // Get Current Platform type (Windows, Mac, Android, IOS, Linux, etc.) return as enum
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Helika")
+    EPlatformType GetPlatformType();
+
+    // Get Current Platform name (Windows, Mac, Android, IOS, Linux, etc.) return in FString
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Helika")
+    FString GetPlatformName();
+
+    // Get the device unique identifier
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Helika")
+    FString GetDeviceUniqueIdentifier();
 
 private:
     FString _helikaApiKey;
+
+    FString _sdk_name = "Unreal";
+
+    FString _sdk_version = "0.1.1";
+
+    FString _sdk_class = "HelikaActor";
 
     void SendHTTPPost(FString url, FString data);
 
