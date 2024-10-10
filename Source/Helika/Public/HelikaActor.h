@@ -115,6 +115,12 @@ public:
 private:
     FString _helikaApiKey;
 
+    FString _sdk_name = "Unreal";
+
+    FString _sdk_version = "0.1.1";
+
+    FString _sdk_class = "HelikaActor";
+
     void SendHTTPPost(FString url, FString data);
 
     void ProcessEventTrackResponse(FString data);

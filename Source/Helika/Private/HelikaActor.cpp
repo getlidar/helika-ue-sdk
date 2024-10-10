@@ -139,9 +139,9 @@ void AHelikaActor::CreateSession()
     fEvent.event_type = "session_created";
 
     // Todo: Turn these into static variables
-    fEvent.event.Add("sdk_name", "Unreal");
-    fEvent.event.Add("sdk_version", "0.1.0");
-    fEvent.event.Add("sdk_class", "HelikaActor");
+    fEvent.event.Add("sdk_name", _sdk_name);
+    fEvent.event.Add("sdk_version", _sdk_version);
+    fEvent.event.Add("sdk_class", _sdk_class);
     fEvent.event.Add("session_id", _sessionID);
     fEvent.event.Add("event_sub_type", "session_created");
     fEvent.event.Add("os", UGameplayStatics::GetPlatformName());
