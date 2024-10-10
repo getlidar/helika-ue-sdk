@@ -34,6 +34,14 @@ enum class EPlatformType : uint8
     PT_UNKNOWN UMETA(DisplayName = "Unknown")
 };
 
+UENUM(BlueprintType)
+enum class TelemetryLevel : uint8
+{
+    None = 0 UMETA(DisplayName = "None"),
+    TelemetryOnly = 100 UMETA(DisplayName = "TelemetryOnly"),
+    All = 200 UMETA(DisplayName = "All"),
+};
+
 USTRUCT(BlueprintType)
 struct FHEvent
 {
@@ -89,9 +97,12 @@ public:
     HelikaEnvironment helikaEnv;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Helika)
-    bool sendingEvents = false;
+    TelemetryLevel telemetry = TelemetryLevel::All;
 
-    void Init(FString apiKeyIn, FString gameIdIN, HelikaEnvironment env, bool enabled = false);
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Helika)
+    bool printEventsToConsole = false;
+
+    void Init(FString apiKeyIn, FString gameIdIN, HelikaEnvironment env, TelemetryLevel telemetryLevel = TelemetryLevel::All, bool isPrintEventsToConsole = false);
 
     UFUNCTION(BlueprintCallable, Category = "Helika")
     void SendEvent(FHSession helikaEvents);
@@ -142,5 +153,7 @@ protected:
 
     bool _isInitialized = false;
 
-    bool _enabled = false;
+    bool _printEventsToConsole = false;
+
+    TelemetryLevel _telemetry = TelemetryLevel::All;
 };
