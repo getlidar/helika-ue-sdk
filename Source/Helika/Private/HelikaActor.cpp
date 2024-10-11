@@ -12,7 +12,7 @@ void AHelikaActor::BeginPlay()
 {
     Super::BeginPlay();
     _playerId = playerId;
-    Init(apiKey, gameId, helikaEnv, sendingEvents);
+    Init(apiKey, gameId, helikaEnv, telemetry, printEventsToConsole);
 }
 
 void AHelikaActor::SetPlayerID(FString InPlayerID)
@@ -35,7 +35,7 @@ FString AHelikaActor::ConvertUrl(HelikaEnvironment baseUrl)
     }
 }
 
-void AHelikaActor::Init(FString apiKeyIn, FString gameIdIN, HelikaEnvironment env, bool enabled)
+void AHelikaActor::Init(FString apiKeyIn, FString gameIdIN, HelikaEnvironment env, TelemetryLevel telemetryLevel, bool isPrintEventsToConsole)
 {
     if (_isInitialized)
     {
@@ -61,54 +61,60 @@ void AHelikaActor::Init(FString apiKeyIn, FString gameIdIN, HelikaEnvironment en
     _sessionID = FGuid::NewGuid().ToString();
     _isInitialized = true;
 
-    _enabled = env != HelikaEnvironment::Localhost ? enabled : false;
-
+    _telemetry = env != HelikaEnvironment::Localhost ? telemetryLevel : TelemetryLevel::None;
+    _printEventsToConsole = isPrintEventsToConsole;
+    if (_telemetry > TelemetryLevel::TelemetryOnly)
+    {
+        // install event setup -> kochava
+    }
     CreateSession();
 }
 
 void AHelikaActor::SendHTTPPost(FString url, FString data)
 {
-    if (!_enabled)
+    if (_printEventsToConsole)
     {
         UE_LOG(LogTemp, Display, TEXT("Sent Helika Event : %s"), *data);
         return;
     }
+    if (_telemetry > TelemetryLevel::None)
+    {
+        FString uriBase = _baseUrl + url;
+        FHttpModule &httpModule = FHttpModule::Get();
+        TSharedRef<IHttpRequest, ESPMode::ThreadSafe> pRequest = httpModule.CreateRequest();
 
-    FString uriBase = _baseUrl + url;
-    FHttpModule &httpModule = FHttpModule::Get();
-    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> pRequest = httpModule.CreateRequest();
+        pRequest->SetVerb(TEXT("POST"));
+        pRequest->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+        pRequest->SetHeader(TEXT("x-api-key"), _helikaApiKey);
 
-    pRequest->SetVerb(TEXT("POST"));
-    pRequest->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
-    pRequest->SetHeader(TEXT("x-api-key"), _helikaApiKey);
-
-    FString RequestContent = data;
-    pRequest->SetContentAsString(RequestContent);
-    pRequest->SetURL(uriBase);
-    pRequest->OnProcessRequestComplete().BindLambda(
-        [&](
-            FHttpRequestPtr pRequest,
-            FHttpResponsePtr pResponse,
-            bool connectedSuccessfully) mutable
-        {
-            if (connectedSuccessfully)
+        FString RequestContent = data;
+        pRequest->SetContentAsString(RequestContent);
+        pRequest->SetURL(uriBase);
+        pRequest->OnProcessRequestComplete().BindLambda(
+            [&](
+                FHttpRequestPtr pRequest,
+                FHttpResponsePtr pResponse,
+                bool connectedSuccessfully) mutable
             {
-
-                ProcessEventTrackResponse(pResponse->GetContentAsString());
-            }
-            else
-            {
-                switch (pRequest->GetStatus())
+                if (connectedSuccessfully)
                 {
-                case EHttpRequestStatus::Failed_ConnectionError:
-                    UE_LOG(LogTemp, Error, TEXT("Connection failed."));
-                default:
-                    UE_LOG(LogTemp, Error, TEXT("Request failed."));
-                }
-            }
-        });
 
-    pRequest->ProcessRequest();
+                    ProcessEventTrackResponse(pResponse->GetContentAsString());
+                }
+                else
+                {
+                    switch (pRequest->GetStatus())
+                    {
+                    case EHttpRequestStatus::Failed_ConnectionError:
+                        UE_LOG(LogTemp, Error, TEXT("Connection failed."));
+                    default:
+                        UE_LOG(LogTemp, Error, TEXT("Request failed."));
+                    }
+                }
+            });
+
+        pRequest->ProcessRequest();
+    }
 }
 
 void AHelikaActor::ProcessEventTrackResponse(FString data)
@@ -142,21 +148,25 @@ void AHelikaActor::CreateSession()
     fEvent.event.Add("sdk_name", _sdk_name);
     fEvent.event.Add("sdk_version", _sdk_version);
     fEvent.event.Add("sdk_class", _sdk_class);
-    fEvent.event.Add("session_id", _sessionID);
+    fEvent.event.Add("sdk_platform", GetPlatformName());
     fEvent.event.Add("event_sub_type", "session_created");
-    fEvent.event.Add("os", UGameplayStatics::GetPlatformName());
-    fEvent.event.Add("device_model", FGenericPlatformMisc::GetDeviceMakeAndModel());
-    fEvent.event.Add("device_ue_unique_identifier", GetDeviceUniqueIdentifier());
+    fEvent.event.Add("telemetry_level", UEnum::GetDisplayValueAsText(_telemetry).ToString());
 
-    // Todo: Add missing if applicable
-    // fEvent.event.Add("sdk_platform", "");
-    // fEvent.event.Add("os", "");
-    // fEvent.event.Add("os_family", "");
-    // fEvent.event.Add("device_model", "");
-    // fEvent.event.Add("device_name", "");
-    // fEvent.event.Add("device_type", "");
-    // fEvent.event.Add("device_ue_unique_identifier", "");
-    // fEvent.event.Add("device_processor_type", "");
+    if (_telemetry > TelemetryLevel::TelemetryOnly)
+    {
+        fEvent.event.Add("os", UGameplayStatics::GetPlatformName());
+        fEvent.event.Add("device_model", FGenericPlatformMisc::GetDeviceMakeAndModel());
+        fEvent.event.Add("device_ue_unique_identifier", GetDeviceUniqueIdentifier());
+        // Todo: Add missing if applicable
+        // fEvent.event.Add("sdk_platform", "");
+        // fEvent.event.Add("os", "");
+        // fEvent.event.Add("os_family", "");
+        // fEvent.event.Add("device_model", "");
+        // fEvent.event.Add("device_name", "");
+        // fEvent.event.Add("device_type", "");
+        // fEvent.event.Add("device_ue_unique_identifier", "");
+        // fEvent.event.Add("device_processor_type", "");
+    }
 
     TArray<FHEvent> fEventsArray;
     fEventsArray.Add(fEvent);
