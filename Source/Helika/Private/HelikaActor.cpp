@@ -35,6 +35,58 @@ FString AHelikaActor::ConvertUrl(HelikaEnvironment baseUrl)
     }
 }
 
+FString AHelikaActor::GetDeviceType()
+{   switch (GetPlatformType())
+    {
+    case EPlatformType::PT_IOS :
+    case EPlatformType::PT_ANDROID :
+        {
+            return "Mobile";
+        }
+    case EPlatformType::PT_WINDOWS :
+    case EPlatformType::PT_MAC :
+    case EPlatformType::PT_LINUX :
+        {
+            return "Desktop";
+        }
+    case EPlatformType::PT_CONSOLE :
+        {
+            return "Console";
+        }
+    case EPlatformType::PT_DEFAULT :
+    case EPlatformType::PT_UNKNOWN :
+        {
+            return "Unknown";            
+        }
+    }
+        return FString();
+}
+
+FString AHelikaActor::GetDeviceProcessorType()
+{
+    switch (GetPlatformType())
+    {
+    case EPlatformType::PT_IOS :
+    case EPlatformType::PT_ANDROID :
+        {
+            return FPlatformMisc::GetCPUChipset();
+        }
+    case EPlatformType::PT_WINDOWS :
+    case EPlatformType::PT_MAC :
+    case EPlatformType::PT_LINUX :
+    case EPlatformType::PT_CONSOLE :
+        {
+            return FPlatformMisc::GetCPUBrand();
+        }
+    case EPlatformType::PT_DEFAULT :
+    case EPlatformType::PT_UNKNOWN :
+        {
+            return FString();            
+        }
+    }
+    return FString();
+}
+
 void AHelikaActor::Init(FString apiKeyIn, FString gameIdIN, HelikaEnvironment env, TelemetryLevel telemetryLevel, bool isPrintEventsToConsole)
 {
     if (_isInitialized)
@@ -154,18 +206,15 @@ void AHelikaActor::CreateSession()
 
     if (_telemetry > TelemetryLevel::TelemetryOnly)
     {
-        fEvent.event.Add("os", UGameplayStatics::GetPlatformName());
-        fEvent.event.Add("device_model", FGenericPlatformMisc::GetDeviceMakeAndModel());
+        FString OSVersionLabel, OSSubVersionLabel;
+        FPlatformMisc::GetOSVersions(OSVersionLabel,OSSubVersionLabel);
+        fEvent.event.Add("os", OSVersionLabel + OSSubVersionLabel);
+        fEvent.event.Add("os_family", GetPlatformName());
+        fEvent.event.Add("device_model", FPlatformMisc::GetDeviceMakeAndModel());
+        fEvent.event.Add("device_name", FPlatformProcess::ComputerName());
+        fEvent.event.Add("device_type", GetDeviceType());
         fEvent.event.Add("device_ue_unique_identifier", GetDeviceUniqueIdentifier());
-        // Todo: Add missing if applicable
-        // fEvent.event.Add("sdk_platform", "");
-        // fEvent.event.Add("os", "");
-        // fEvent.event.Add("os_family", "");
-        // fEvent.event.Add("device_model", "");
-        // fEvent.event.Add("device_name", "");
-        // fEvent.event.Add("device_type", "");
-        // fEvent.event.Add("device_ue_unique_identifier", "");
-        // fEvent.event.Add("device_processor_type", "");
+        fEvent.event.Add("device_processor_type", GetDeviceProcessorType());
     }
 
     TArray<FHEvent> fEventsArray;
@@ -189,6 +238,8 @@ EPlatformType AHelikaActor::GetPlatformType()
     return EPlatformType::PT_ANDROID;
 #elif PLATFORM_LINUX
     return EPlatformType::PT_LINUX;
+#elif PLATFORM_CONSOLE
+    return EPlatformType::PT_CONSOLE;
 #else
     ensureMsgf(false, TEXT("Platform unknown"));
     return EPlatformType::PT_UNKNOWN;
@@ -207,6 +258,8 @@ FString AHelikaActor::GetPlatformName()
     return FString(TEXT("Android"));
 #elif PLATFORM_LINUX
     return FString(TEXT("Linux"));
+#elif PLATFORM_CONSOLE
+    return FString(TEXT("Console"));
 #else
     ensureMsgf(false, TEXT("Platform unknown"));
     return FString(TEXT("Unknown"));
@@ -224,6 +277,37 @@ FString AHelikaActor::GetDeviceUniqueIdentifier()
 #elif PLATFORM_ANDROID || PLATFORM_IOS
     return FPlatformMisc::GetDeviceId();
 #else
-    return FString();
+    return FPlatformMisc::GetDeviceId();
 #endif
+}
+
+
+///
+/// Sample Usage:
+/// TSharedPtr<FJsonObject> EventData = MakeShareable(new FJsonObject());
+/// EventData->SetStringField("String Field", "Helika");
+/// EventData->SetNumberField("Number Field", 1234);
+/// EventData->SetBoolField("Bool value", true);
+/// SendCustomEvent(EventData);
+/// 
+/// @param eventProps Event data in form of json object
+void AHelikaActor::SendCustomEvent(const TSharedPtr<FJsonObject>& eventProps)
+{
+    if(!_isInitialized)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Helika Actor is not yet initialized"));
+    }
+
+    // adding unique id to event
+    TSharedPtr<FJsonObject> newEvent = MakeShareable(new FJsonObject());
+    newEvent->SetStringField("id", FGuid::NewGuid().ToString());
+    newEvent->SetObjectField("events", eventProps);
+
+    // converting Json object to string
+    FString JsonString;
+    TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JsonString);
+    FJsonSerializer::Serialize(newEvent.ToSharedRef(), Writer);
+
+    // send event to helika API
+    SendHTTPPost("/game/game-event", JsonString);
 }

@@ -31,6 +31,7 @@ enum class EPlatformType : uint8
     PT_LINUX UMETA(DisplayName = "Linux"),
     PT_IOS UMETA(DisplayName = "IOS"),
     PT_ANDROID UMETA(DisplayName = "Android"),
+    PT_CONSOLE UMETA(DisplayName = "Console"),
     PT_UNKNOWN UMETA(DisplayName = "Unknown")
 };
 
@@ -123,6 +124,8 @@ public:
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Helika")
     FString GetDeviceUniqueIdentifier();
 
+    void SendCustomEvent(const TSharedPtr<FJsonObject>& eventProps);
+
 private:
     FString _helikaApiKey;
 
@@ -139,6 +142,10 @@ private:
     void CreateSession();
 
     FString ConvertUrl(HelikaEnvironment baseUrl);
+
+    // Get the device type (Desktop, Mobile, Console, etc.)
+    FString GetDeviceType();
+    FString GetDeviceProcessorType();
 
 protected:
     FString _baseUrl;
