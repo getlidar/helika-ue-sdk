@@ -1,9 +1,12 @@
 
 #include "HelikaActor.h"
-#include "Kismet/GameplayStatics.h"
+#include "HttpModule.h"
+#include "Interfaces/IHttpRequest.h"
+#include "Interfaces/IHttpResponse.h"
+#include "Runtime/JsonUtilities/Public/JsonObjectConverter.h"
 #include "GenericPlatform/GenericPlatformMisc.h"
 
-AHelikaActor::AHelikaActor()
+AHelikaActor::AHelikaActor(): helikaEnv()
 {
     PrimaryActorTick.bCanEverTick = true;
 }
@@ -191,39 +194,96 @@ void AHelikaActor::SendEvent(FHSession helikaEvents)
     SendHTTPPost("/game/game-event", JSONPayload);
 }
 
+/// Overloaded method that receives the events json object and then pass the payload as string to the API
+/// @param helikaEvents Pass the Json events object
+void AHelikaActor::SendEvent(const TSharedPtr<FJsonObject>& helikaEvents)
+{
+    helikaEvents->SetStringField("id", _sessionID);
+    for (auto Event : helikaEvents->GetArrayField(TEXT("events")))
+    {
+        if (!Event->AsObject()->HasField(TEXT("game_id")))
+            Event->AsObject()->SetStringField("game_id", _gameId);
+        Event->AsObject()->SetStringField("created_at",  FDateTime::UtcNow().ToIso8601());
+        Event->AsObject()->GetObjectField(TEXT("event"))->SetStringField("session_id", _sessionID);
+        Event->AsObject()->GetObjectField(TEXT("event"))->SetStringField("player_id", _playerId);
+    }
+    FString JSONPayload;
+    TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JSONPayload);
+    FJsonSerializer::Serialize(helikaEvents.ToSharedRef(), Writer);
+    SendHTTPPost("/game/game-event", JSONPayload);
+}
+
 void AHelikaActor::CreateSession()
 {
-    FHEvent fEvent;
-    fEvent.event_type = "session_created";
 
-    // Todo: Turn these into static variables
-    fEvent.event.Add("sdk_name", _sdk_name);
-    fEvent.event.Add("sdk_version", _sdk_version);
-    fEvent.event.Add("sdk_class", _sdk_class);
-    fEvent.event.Add("sdk_platform", GetPlatformName());
-    fEvent.event.Add("event_sub_type", "session_created");
-    fEvent.event.Add("telemetry_level", UEnum::GetDisplayValueAsText(_telemetry).ToString());
+    /// TODO: Review
+    /// Creating json object for events
+    TSharedPtr<FJsonObject> fEvent = MakeShareable(new FJsonObject());
+    fEvent->SetStringField("event_Type", "session_created");
+
+    TSharedPtr<FJsonObject> subEvent = MakeShareable(new FJsonObject());
+    subEvent->SetStringField("sdk_name", _sdk_name);
+    subEvent->SetStringField("sdk_version", _sdk_version);
+    subEvent->SetStringField("sdk_class", _sdk_class);
+    subEvent->SetStringField("session_id", _sessionID);
+    subEvent->SetStringField("event_sub_type", "session_created");
 
     if (_telemetry > TelemetryLevel::TelemetryOnly)
     {
         FString OSVersionLabel, OSSubVersionLabel;
         FPlatformMisc::GetOSVersions(OSVersionLabel,OSSubVersionLabel);
-        fEvent.event.Add("os", OSVersionLabel + OSSubVersionLabel);
-        fEvent.event.Add("os_family", GetPlatformName());
-        fEvent.event.Add("device_model", FPlatformMisc::GetDeviceMakeAndModel());
-        fEvent.event.Add("device_name", FPlatformProcess::ComputerName());
-        fEvent.event.Add("device_type", GetDeviceType());
-        fEvent.event.Add("device_ue_unique_identifier", GetDeviceUniqueIdentifier());
-        fEvent.event.Add("device_processor_type", GetDeviceProcessorType());
+        subEvent->SetStringField("os", OSVersionLabel + OSSubVersionLabel);
+        subEvent->SetStringField("os_family", GetPlatformName());
+        subEvent->SetStringField("device_model", FPlatformMisc::GetDeviceMakeAndModel());
+        subEvent->SetStringField("device_name", FPlatformProcess::ComputerName());
+        subEvent->SetStringField("device_type", GetDeviceType());
+        subEvent->SetStringField("device_ue_unique_identifier", GetDeviceUniqueIdentifier());
+        subEvent->SetStringField("device_processor_type", GetDeviceProcessorType());        
     }
 
-    TArray<FHEvent> fEventsArray;
-    fEventsArray.Add(fEvent);
+    fEvent->SetObjectField("event", subEvent);
+    
+    TArray<TSharedPtr<FJsonValue>> fEventsArray;
+    TSharedPtr<FJsonValueObject> JsonValueObject = MakeShareable(new FJsonValueObject(fEvent));
+    fEventsArray.Add(JsonValueObject);
 
-    FHSession Fsession;
-    Fsession.events = fEventsArray;
+    TSharedPtr<FJsonObject> FSession = MakeShareable(new FJsonObject());
+    FSession->SetArrayField("events", fEventsArray);
+    SendEvent(FSession);    
 
-    SendEvent(Fsession);
+
+    
+    // FHEvent fEvent;
+    // fEvent.event_type = "session_created";
+    //
+    // // Todo: Turn these into static variables
+    // fEvent.event.Add("sdk_name", _sdk_name);
+    // fEvent.event.Add("sdk_version", _sdk_version);
+    // fEvent.event.Add("sdk_class", _sdk_class);
+    // fEvent.event.Add("sdk_platform", GetPlatformName());
+    // fEvent.event.Add("event_sub_type", "session_created");
+    // fEvent.event.Add("telemetry_level", UEnum::GetDisplayValueAsText(_telemetry).ToString());
+    //
+    // if (_telemetry > TelemetryLevel::TelemetryOnly)
+    // {
+    //     FString OSVersionLabel, OSSubVersionLabel;
+    //     FPlatformMisc::GetOSVersions(OSVersionLabel,OSSubVersionLabel);
+    //     fEvent.event.Add("os", OSVersionLabel + OSSubVersionLabel);
+    //     fEvent.event.Add("os_family", GetPlatformName());
+    //     fEvent.event.Add("device_model", FPlatformMisc::GetDeviceMakeAndModel());
+    //     fEvent.event.Add("device_name", FPlatformProcess::ComputerName());
+    //     fEvent.event.Add("device_type", GetDeviceType());
+    //     fEvent.event.Add("device_ue_unique_identifier", GetDeviceUniqueIdentifier());
+    //     fEvent.event.Add("device_processor_type", GetDeviceProcessorType());
+    // }
+    //
+    // TArray<FHEvent> fEventsArray;
+    // fEventsArray.Add(fEvent);
+    //
+    // FHSession Fsession;
+    // Fsession.events = fEventsArray;
+    //
+    // SendEvent(Fsession);
 }
 
 EPlatformType AHelikaActor::GetPlatformType()

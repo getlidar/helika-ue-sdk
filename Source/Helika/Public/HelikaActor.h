@@ -4,11 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "HttpModule.h"
-#include "Interfaces/IHttpRequest.h"
-#include "Interfaces/IHttpResponse.h"
-#include "Json.h"
-#include "Runtime/JsonUtilities/Public/JsonObjectConverter.h"
 #include "Misc/Guid.h"
 #include "Misc/DateTime.h"
 #include "Containers/UnrealString.h"
@@ -107,6 +102,9 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Helika")
     void SendEvent(FHSession helikaEvents);
+
+    // Overloaded method using JsonObject
+    void SendEvent(const TSharedPtr<FJsonObject>& helikaEvents);
 
     // Sets the player ID
     UFUNCTION(BlueprintCallable, Category = "Helika")
