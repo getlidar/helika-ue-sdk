@@ -3,10 +3,9 @@
 #include "HttpModule.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
-#include "Runtime/JsonUtilities/Public/JsonObjectConverter.h"
 #include "GenericPlatform/GenericPlatformMisc.h"
 
-AHelikaActor::AHelikaActor(): helikaEnv()
+AHelikaActor::AHelikaActor()
 {
     PrimaryActorTick.bCanEverTick = true;
 }
@@ -14,24 +13,302 @@ AHelikaActor::AHelikaActor(): helikaEnv()
 void AHelikaActor::BeginPlay()
 {
     Super::BeginPlay();
-    _playerId = playerId;
-    Init(apiKey, gameId, helikaEnv, telemetry, printEventsToConsole);
+    Init(ApiKey, GameId, HelikaEnvironment, Telemetry, bPrintEventsToConsole);
+}
+
+void AHelikaActor::Init(const FString& InApiKey, const FString& InGameId, const EHelikaEnvironment InHelikaEnvironment, const ETelemetryLevel InTelemetryLevel, const bool bInPrintEventsToConsole)
+{
+    if (bIsInitialized)
+    {
+        UE_LOG(LogTemp, Log, TEXT("HelikaActor is already initialized"));
+        return;
+    }
+
+    if (InGameId.IsEmpty())
+    {
+        UE_LOG(LogTemp, Error, TEXT("Missing Game ID"));
+        return;
+    }
+
+    if (InApiKey.IsEmpty())
+    {
+        UE_LOG(LogTemp, Error, TEXT("Invalid API Key"));
+        return;
+    }
+
+    BaseUrl = ConvertUrl(InHelikaEnvironment);
+    SessionId = FGuid::NewGuid().ToString();
+    bIsInitialized = true;
+
+    // If Localhost is set, force print events
+    Telemetry = InHelikaEnvironment != EHelikaEnvironment::HE_Localhost ? InTelemetryLevel : ETelemetryLevel::TL_None;
+
+    // If PrintEventsToConsole is set to true, we only print the event to console, and we don't send it
+    bPrintEventsToConsole = bInPrintEventsToConsole;
+    
+    if (Telemetry > ETelemetryLevel::TL_TelemetryOnly)
+    {
+        // install event setup -> kochava
+    }
+    CreateSession();
+}
+
+///
+/// Sample Usage:
+/// TSharedPtr<FJsonObject> EventData = MakeShareable(new FJsonObject());
+/// EventData->SetStringField("String Field", "Helika");
+/// EventData->SetNumberField("Number Field", 1234);
+/// EventData->SetBoolField("Bool value", true);
+/// SendCustomEvent(EventData);
+/// 
+/// @param EventProps Event data in form of json object
+void AHelikaActor::SendCustomEvent(TSharedPtr<FJsonObject> EventProps) const
+{
+    if(!bIsInitialized)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Helika Actor is not yet initialized"));
+    }
+
+    // adding unique id to event
+    const TSharedPtr<FJsonObject> NewEvent = MakeShareable(new FJsonObject());
+    NewEvent->SetStringField("id", FGuid::NewGuid().ToString());
+
+    AppendAttributesToJsonObject(EventProps);
+
+    TArray<TSharedPtr<FJsonValue>> EventArrayJsonObject;
+    const TSharedPtr<FJsonValueObject> JsonValueObject = MakeShareable(new FJsonValueObject(EventProps));
+    EventArrayJsonObject.Add(JsonValueObject);
+    NewEvent->SetArrayField("events", EventArrayJsonObject);
+
+    // converting Json object to string
+    FString JsonString;
+    const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JsonString);
+    FJsonSerializer::Serialize(NewEvent.ToSharedRef(), Writer);
+
+    // send event to helika API
+    SendHTTPPost("/game/game-event", JsonString);
+}
+
+///
+/// Sample Usage:
+/// TArray<TSharedPtr<FJsonObject>> Array;
+/// TSharedPtr<FJsonObject> EventData1 = MakeShareable(new FJsonObject());
+/// EventData1->SetStringField("event_type", "gameEvent");
+/// EventData1->SetStringField("String Field", "Event1");
+/// EventData1->SetNumberField("Number Field", 1234);
+/// EventData1->SetBoolField("Bool value", true);
+/// TSharedPtr<FJsonObject> EventData2 = MakeShareable(new FJsonObject());
+/// EventData2->SetStringField("event_type", "gameEvent");
+/// EventData2->SetStringField("String Field", "Event2");
+/// EventData2->SetNumberField("Number Field", 1234);
+/// EventData2->SetBoolField("Bool value", true);
+/// Array.Add(EventData1);
+/// Array.Add(EventData2);
+/// SendCustomEvents(Array);
+/// 
+/// @param EventProps Event data in form of json[] object
+void AHelikaActor::SendCustomEvents(TArray<TSharedPtr<FJsonObject>> EventProps) const
+{
+    if(!bIsInitialized)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Helika Actor is not yet initialized"));
+    }
+
+    for (auto EventProp : EventProps)
+    {
+        AppendAttributesToJsonObject(EventProp);
+    }
+
+    const TSharedPtr<FJsonObject> NewEvent = MakeShareable(new FJsonObject());
+    NewEvent->SetStringField("id", FGuid::NewGuid().ToString());
+    
+    TArray<TSharedPtr<FJsonValue>> EventArrayJsonObject;
+    for (auto EventProp : EventProps)
+    {        
+        const TSharedPtr<FJsonValueObject> JsonValueObject = MakeShareable(new FJsonValueObject(EventProp));
+        EventArrayJsonObject.Add(JsonValueObject);
+    }        
+    NewEvent->SetArrayField("events", EventArrayJsonObject);
+    
+    // converting Json object to string
+    FString JsonString;
+    const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JsonString);
+    FJsonSerializer::Serialize(NewEvent.ToSharedRef(), Writer);
+
+    // send event to helika API
+    SendHTTPPost("/game/game-event", JsonString);    
+}
+
+void AHelikaActor::SetPrintToConsole(const bool bInPrintEventsToConsole)
+{
+    bPrintEventsToConsole = bInPrintEventsToConsole;
+}
+
+FString AHelikaActor::GetPlayerId()
+{
+    return PlayerId;
 }
 
 void AHelikaActor::SetPlayerID(FString InPlayerID)
 {
-    playerId = InPlayerID;
+    PlayerId = InPlayerID;
 }
 
-FString AHelikaActor::ConvertUrl(HelikaEnvironment baseUrl)
+void AHelikaActor::AppendAttributesToJsonObject(const TSharedPtr<FJsonObject>& JsonObject) const
 {
-    switch (baseUrl)
+    // Add game_id only if the event doesn't already have it
+    AddIfNull(JsonObject, "game_id", GameId);
+    
+    // Convert to ISO 8601 format string using "o" specifier
+    AddOrReplace(JsonObject, "created_at", FDateTime::UtcNow().ToIso8601());
+
+    if(!JsonObject->HasField(TEXT("event_type")) || JsonObject->GetStringField(TEXT("event_type")).IsEmpty())
     {
-    case HelikaEnvironment::Production:
+        UE_LOG(LogTemp, Error, TEXT("Invalid Event: Missing 'event_type' field"));
+    }
+
+    if(!JsonObject->HasField(TEXT("event")))
+    {
+        JsonObject->SetObjectField(TEXT("event"), MakeShareable(new FJsonObject()));
+    }
+
+    if(JsonObject->GetObjectField(TEXT("event")) == nullptr)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Invalid Event: 'event' field must be of type [JsonObject]"));
+    }
+
+    const TSharedPtr<FJsonObject> InternalEvent = JsonObject->GetObjectField(TEXT("event"));
+    AddOrReplace(InternalEvent, "session_id", SessionId);
+
+    if(!PlayerId.IsEmpty())
+    {
+        AddOrReplace(InternalEvent, "player_id", PlayerId);
+    }
+}
+
+void AHelikaActor::CreateSession() const
+{
+    const TSharedPtr<FJsonObject> InternalEvent = MakeShareable(new FJsonObject());
+    InternalEvent->SetStringField("session_id", SessionId);
+    InternalEvent->SetStringField("player_id", PlayerId);
+    InternalEvent->SetStringField("sdk_name", SDKName);
+    InternalEvent->SetStringField("sdk_version", SDKVersion);
+    InternalEvent->SetStringField("sdk_class", SDKClass);
+    InternalEvent->SetStringField("sdk_platform", GetPlatformName());
+    InternalEvent->SetStringField("event_sub_type", "session_created");
+    InternalEvent->SetStringField("telemetry_level", UEnum::GetValueAsString(Telemetry).RightChop(20));
+
+    // TelemetryOnly means not sending Device, and Os information
+    if (Telemetry > ETelemetryLevel::TL_TelemetryOnly)
+    {
+        FString OSVersionLabel, OSSubVersionLabel;
+        FPlatformMisc::GetOSVersions(OSVersionLabel,OSSubVersionLabel);
+        InternalEvent->SetStringField("os", OSVersionLabel + OSSubVersionLabel);
+        InternalEvent->SetStringField("os_family", GetPlatformName());
+        InternalEvent->SetStringField("device_model", FPlatformMisc::GetDeviceMakeAndModel());
+        InternalEvent->SetStringField("device_name", FPlatformProcess::ComputerName());
+        InternalEvent->SetStringField("device_type", GetDeviceType());
+        InternalEvent->SetStringField("device_ue_unique_identifier", GetDeviceUniqueIdentifier());
+        InternalEvent->SetStringField("device_processor_type", GetDeviceProcessorType());        
+    }
+    
+    /// Creating json object for events
+    const TSharedPtr<FJsonObject> CreateSessionEvent = MakeShareable(new FJsonObject());
+    CreateSessionEvent->SetStringField("game_id", GameId);
+    CreateSessionEvent->SetStringField("event_Type", "session_created");
+    CreateSessionEvent->SetStringField("created_at", FDateTime::UtcNow().ToIso8601());
+    CreateSessionEvent->SetObjectField("event", InternalEvent);
+    
+    const TSharedPtr<FJsonObject> Event = MakeShareable(new FJsonObject());
+    Event->SetStringField("id", FGuid::NewGuid().ToString());
+    TArray<TSharedPtr<FJsonValue>> EventArrayJsonObject;
+    const TSharedPtr<FJsonValueObject> JsonValueObject = MakeShareable(new FJsonValueObject(CreateSessionEvent));
+    EventArrayJsonObject.Add(JsonValueObject);
+    Event->SetArrayField("events", EventArrayJsonObject);
+
+    FString JSONPayload;
+    const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JSONPayload);
+    FJsonSerializer::Serialize(Event.ToSharedRef(), Writer);
+    
+    SendHTTPPost("/game/game-event", JSONPayload);    
+}
+
+void AHelikaActor::SendHTTPPost(const FString& Url, const FString& Data) const
+{
+    if (bPrintEventsToConsole)
+    {
+        UE_LOG(LogTemp, Display, TEXT("Sent Helika Event : %s"), *Data);
+        return;
+    }
+    if (Telemetry > ETelemetryLevel::TL_None)
+    {
+        const FString URIBase = BaseUrl + Url;
+        FHttpModule &HTTPModule = FHttpModule::Get();
+        const TSharedRef<IHttpRequest, ESPMode::ThreadSafe> PRequest = HTTPModule.CreateRequest();
+
+        PRequest->SetVerb(TEXT("POST"));
+        PRequest->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+        PRequest->SetHeader(TEXT("x-api-key"), ApiKey);
+
+        const FString RequestContent = Data;
+        PRequest->SetContentAsString(RequestContent);
+        PRequest->SetURL(URIBase);
+        PRequest->OnProcessRequestComplete().BindLambda(
+            [&](
+            const FHttpRequestPtr& Request,
+            const FHttpResponsePtr& Response,
+            const bool bConnectedSuccessfully) mutable
+            {
+                if (bConnectedSuccessfully)
+                {
+
+                    ProcessEventTrackResponse(Response->GetContentAsString());
+                }
+                else
+                {
+                    switch (Request->GetFailureReason())
+                    {
+                    case EHttpFailureReason::ConnectionError:
+                        UE_LOG(LogTemp, Error, TEXT("Connection failed."));
+                    default:
+                        UE_LOG(LogTemp, Error, TEXT("Request failed."));
+                    }
+                }
+            });
+
+        PRequest->ProcessRequest();
+    }
+}
+
+void AHelikaActor::AddIfNull(const TSharedPtr<FJsonObject>& HelikaEvent, const FString& Key, const FString& NewValue)
+{
+    if(!HelikaEvent->HasField(Key))
+    {
+        HelikaEvent->SetStringField(Key, NewValue);
+    }
+}
+
+void AHelikaActor::AddOrReplace(const TSharedPtr<FJsonObject>& HelikaEvent, const FString& Key, const FString& NewValue)
+{
+    if(HelikaEvent->HasField(Key))
+    {
+        HelikaEvent->SetStringField(Key, NewValue);
+    }
+    else
+    {
+        HelikaEvent->SetStringField(Key, NewValue);
+    }
+}
+
+FString AHelikaActor::ConvertUrl(const EHelikaEnvironment InHelikaEnvironment)
+{
+    switch (InHelikaEnvironment)
+    {
+    case EHelikaEnvironment::HE_Production:
         return "https://api.helika.io/v1";
-    case HelikaEnvironment::Develop:
+    case EHelikaEnvironment::HE_Develop:
         return "https://api-stage.helika.io/v1";
-    case HelikaEnvironment::Localhost:
+    case EHelikaEnvironment::HE_Localhost:
         return "http://localhost:8181/v1";
     default:
         return "http://localhost:8181/v1";
@@ -90,240 +367,44 @@ FString AHelikaActor::GetDeviceProcessorType()
     return FString();
 }
 
-void AHelikaActor::Init(FString apiKeyIn, FString gameIdIN, HelikaEnvironment env, TelemetryLevel telemetryLevel, bool isPrintEventsToConsole)
-{
-    if (_isInitialized)
-    {
-        UE_LOG(LogTemp, Log, TEXT("HelikaActor is already initialized"));
-        return;
-    }
-
-    if (gameIdIN.IsEmpty())
-    {
-        UE_LOG(LogTemp, Error, TEXT("Missing Game ID"));
-        return;
-    }
-
-    if (apiKeyIn.IsEmpty())
-    {
-        UE_LOG(LogTemp, Error, TEXT("Invalid API Key"));
-        return;
-    }
-
-    _helikaApiKey = apiKeyIn;
-    _gameId = gameIdIN;
-    _baseUrl = ConvertUrl(env);
-    _sessionID = FGuid::NewGuid().ToString();
-    _isInitialized = true;
-
-    _telemetry = env != HelikaEnvironment::Localhost ? telemetryLevel : TelemetryLevel::None;
-    _printEventsToConsole = isPrintEventsToConsole;
-    if (_telemetry > TelemetryLevel::TelemetryOnly)
-    {
-        // install event setup -> kochava
-    }
-    CreateSession();
-}
-
-void AHelikaActor::SendHTTPPost(FString url, FString data)
-{
-    if (_printEventsToConsole)
-    {
-        UE_LOG(LogTemp, Display, TEXT("Sent Helika Event : %s"), *data);
-        return;
-    }
-    if (_telemetry > TelemetryLevel::None)
-    {
-        FString uriBase = _baseUrl + url;
-        FHttpModule &httpModule = FHttpModule::Get();
-        TSharedRef<IHttpRequest, ESPMode::ThreadSafe> pRequest = httpModule.CreateRequest();
-
-        pRequest->SetVerb(TEXT("POST"));
-        pRequest->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
-        pRequest->SetHeader(TEXT("x-api-key"), _helikaApiKey);
-
-        FString RequestContent = data;
-        pRequest->SetContentAsString(RequestContent);
-        pRequest->SetURL(uriBase);
-        pRequest->OnProcessRequestComplete().BindLambda(
-            [&](
-                FHttpRequestPtr pRequest,
-                FHttpResponsePtr pResponse,
-                bool connectedSuccessfully) mutable
-            {
-                if (connectedSuccessfully)
-                {
-
-                    ProcessEventTrackResponse(pResponse->GetContentAsString());
-                }
-                else
-                {
-                    switch (pRequest->GetStatus())
-                    {
-                    case EHttpRequestStatus::Failed_ConnectionError:
-                        UE_LOG(LogTemp, Error, TEXT("Connection failed."));
-                    default:
-                        UE_LOG(LogTemp, Error, TEXT("Request failed."));
-                    }
-                }
-            });
-
-        pRequest->ProcessRequest();
-    }
-}
-
-void AHelikaActor::ProcessEventTrackResponse(FString data)
-{
-    UE_LOG(LogTemp, Display, TEXT("Helika Server Responce : %s"), *data);
-}
-
-void AHelikaActor::SendEvent(FHSession helikaEvents)
-{
-    helikaEvents.id = _sessionID;
-
-    for (auto &Event : helikaEvents.events)
-    {
-        if (Event.game_id.IsEmpty())
-            Event.game_id = _gameId;
-        Event.created_at = FDateTime::UtcNow().ToIso8601();
-        Event.event.Add("session_id", _sessionID);
-        Event.event.Add("player_id", _playerId);
-    }
-    FString JSONPayload;
-    FJsonObjectConverter::UStructToJsonObjectString(helikaEvents, JSONPayload, 0, 0);
-    SendHTTPPost("/game/game-event", JSONPayload);
-}
-
-/// Overloaded method that receives the events json object and then pass the payload as string to the API
-/// @param helikaEvents Pass the Json events object
-void AHelikaActor::SendEvent(const TSharedPtr<FJsonObject>& helikaEvents)
-{
-    helikaEvents->SetStringField("id", _sessionID);
-    for (auto Event : helikaEvents->GetArrayField(TEXT("events")))
-    {
-        if (!Event->AsObject()->HasField(TEXT("game_id")))
-            Event->AsObject()->SetStringField("game_id", _gameId);
-        Event->AsObject()->SetStringField("created_at",  FDateTime::UtcNow().ToIso8601());
-        Event->AsObject()->GetObjectField(TEXT("event"))->SetStringField("session_id", _sessionID);
-        Event->AsObject()->GetObjectField(TEXT("event"))->SetStringField("player_id", _playerId);
-    }
-    FString JSONPayload;
-    TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JSONPayload);
-    FJsonSerializer::Serialize(helikaEvents.ToSharedRef(), Writer);
-    SendHTTPPost("/game/game-event", JSONPayload);
-}
-
-void AHelikaActor::CreateSession()
-{
-
-    /// TODO: Review
-    /// Creating json object for events
-    TSharedPtr<FJsonObject> fEvent = MakeShareable(new FJsonObject());
-    fEvent->SetStringField("event_Type", "session_created");
-
-    TSharedPtr<FJsonObject> subEvent = MakeShareable(new FJsonObject());
-    subEvent->SetStringField("sdk_name", _sdk_name);
-    subEvent->SetStringField("sdk_version", _sdk_version);
-    subEvent->SetStringField("sdk_class", _sdk_class);
-    subEvent->SetStringField("session_id", _sessionID);
-    subEvent->SetStringField("event_sub_type", "session_created");
-
-    if (_telemetry > TelemetryLevel::TelemetryOnly)
-    {
-        FString OSVersionLabel, OSSubVersionLabel;
-        FPlatformMisc::GetOSVersions(OSVersionLabel,OSSubVersionLabel);
-        subEvent->SetStringField("os", OSVersionLabel + OSSubVersionLabel);
-        subEvent->SetStringField("os_family", GetPlatformName());
-        subEvent->SetStringField("device_model", FPlatformMisc::GetDeviceMakeAndModel());
-        subEvent->SetStringField("device_name", FPlatformProcess::ComputerName());
-        subEvent->SetStringField("device_type", GetDeviceType());
-        subEvent->SetStringField("device_ue_unique_identifier", GetDeviceUniqueIdentifier());
-        subEvent->SetStringField("device_processor_type", GetDeviceProcessorType());        
-    }
-
-    fEvent->SetObjectField("event", subEvent);
-    
-    TArray<TSharedPtr<FJsonValue>> fEventsArray;
-    TSharedPtr<FJsonValueObject> JsonValueObject = MakeShareable(new FJsonValueObject(fEvent));
-    fEventsArray.Add(JsonValueObject);
-
-    TSharedPtr<FJsonObject> FSession = MakeShareable(new FJsonObject());
-    FSession->SetArrayField("events", fEventsArray);
-    SendEvent(FSession);    
-
-
-    
-    // FHEvent fEvent;
-    // fEvent.event_type = "session_created";
-    //
-    // // Todo: Turn these into static variables
-    // fEvent.event.Add("sdk_name", _sdk_name);
-    // fEvent.event.Add("sdk_version", _sdk_version);
-    // fEvent.event.Add("sdk_class", _sdk_class);
-    // fEvent.event.Add("sdk_platform", GetPlatformName());
-    // fEvent.event.Add("event_sub_type", "session_created");
-    // fEvent.event.Add("telemetry_level", UEnum::GetDisplayValueAsText(_telemetry).ToString());
-    //
-    // if (_telemetry > TelemetryLevel::TelemetryOnly)
-    // {
-    //     FString OSVersionLabel, OSSubVersionLabel;
-    //     FPlatformMisc::GetOSVersions(OSVersionLabel,OSSubVersionLabel);
-    //     fEvent.event.Add("os", OSVersionLabel + OSSubVersionLabel);
-    //     fEvent.event.Add("os_family", GetPlatformName());
-    //     fEvent.event.Add("device_model", FPlatformMisc::GetDeviceMakeAndModel());
-    //     fEvent.event.Add("device_name", FPlatformProcess::ComputerName());
-    //     fEvent.event.Add("device_type", GetDeviceType());
-    //     fEvent.event.Add("device_ue_unique_identifier", GetDeviceUniqueIdentifier());
-    //     fEvent.event.Add("device_processor_type", GetDeviceProcessorType());
-    // }
-    //
-    // TArray<FHEvent> fEventsArray;
-    // fEventsArray.Add(fEvent);
-    //
-    // FHSession Fsession;
-    // Fsession.events = fEventsArray;
-    //
-    // SendEvent(Fsession);
-}
-
 EPlatformType AHelikaActor::GetPlatformType()
 {
-#if PLATFORM_WINDOWS
-    return EPlatformType::PT_WINDOWS;
-#elif PLATFORM_IOS
-    return EPlatformType::PT_IOS;
-#elif PLATFORM_MAC
-    return EPlatformType::PT_MAC;
-#elif PLATFORM_ANDROID
-    return EPlatformType::PT_ANDROID;
-#elif PLATFORM_LINUX
-    return EPlatformType::PT_LINUX;
-#elif PLATFORM_CONSOLE
-    return EPlatformType::PT_CONSOLE;
-#else
-    ensureMsgf(false, TEXT("Platform unknown"));
-    return EPlatformType::PT_UNKNOWN;
-#endif
+    #if PLATFORM_WINDOWS
+        return EPlatformType::PT_WINDOWS;
+    #elif PLATFORM_IOS
+        return EPlatformType::PT_IOS;
+    #elif PLATFORM_MAC
+        return EPlatformType::PT_MAC;
+    #elif PLATFORM_ANDROID
+        return EPlatformType::PT_ANDROID;
+    #elif PLATFORM_LINUX
+        return EPlatformType::PT_LINUX;
+    #elif PLATFORM_CONSOLE
+        return EPlatformType::PT_CONSOLE;
+    #else
+        ensureMsgf(false, TEXT("Platform unknown"));
+        return EPlatformType::PT_UNKNOWN;
+    #endif
 }
 
 FString AHelikaActor::GetPlatformName()
 {
-#if PLATFORM_WINDOWS
-    return FString(TEXT("Windows"));
-#elif PLATFORM_IOS
-    return FString(TEXT("IOS"));
-#elif PLATFORM_MAC
-    return FString(TEXT("Mac"));
-#elif PLATFORM_ANDROID
-    return FString(TEXT("Android"));
-#elif PLATFORM_LINUX
-    return FString(TEXT("Linux"));
-#elif PLATFORM_CONSOLE
-    return FString(TEXT("Console"));
-#else
-    ensureMsgf(false, TEXT("Platform unknown"));
-    return FString(TEXT("Unknown"));
-#endif
+    #if PLATFORM_WINDOWS
+        return FString(TEXT("Windows"));
+    #elif PLATFORM_IOS
+        return FString(TEXT("IOS"));
+    #elif PLATFORM_MAC
+        return FString(TEXT("Mac"));
+    #elif PLATFORM_ANDROID
+        return FString(TEXT("Android"));
+    #elif PLATFORM_LINUX
+        return FString(TEXT("Linux"));
+    #elif PLATFORM_CONSOLE
+        return FString(TEXT("Console"));
+    #else
+        ensureMsgf(false, TEXT("Platform unknown"));
+        return FString(TEXT("Unknown"));
+    #endif
 }
 
 ///
@@ -332,42 +413,16 @@ FString AHelikaActor::GetPlatformName()
 /// @return
 FString AHelikaActor::GetDeviceUniqueIdentifier()
 {
-#if PLATFORM_WINDOWS || PLATFORM_MAC
-    return FPlatformMisc::GetOperatingSystemId();
-#elif PLATFORM_ANDROID || PLATFORM_IOS
-    return FPlatformMisc::GetDeviceId();
-#else
-    return FPlatformMisc::GetDeviceId();
-#endif
+    #if PLATFORM_WINDOWS || PLATFORM_MAC
+        return FPlatformMisc::GetOperatingSystemId();
+    #elif PLATFORM_ANDROID || PLATFORM_IOS
+        return FPlatformMisc::GetDeviceId();
+    #else
+        return FPlatformMisc::GetDeviceId();
+    #endif
 }
 
-
-///
-/// Sample Usage:
-/// TSharedPtr<FJsonObject> EventData = MakeShareable(new FJsonObject());
-/// EventData->SetStringField("String Field", "Helika");
-/// EventData->SetNumberField("Number Field", 1234);
-/// EventData->SetBoolField("Bool value", true);
-/// SendCustomEvent(EventData);
-/// 
-/// @param eventProps Event data in form of json object
-void AHelikaActor::SendCustomEvent(const TSharedPtr<FJsonObject>& eventProps)
+void AHelikaActor::ProcessEventTrackResponse(const FString& Data)
 {
-    if(!_isInitialized)
-    {
-        UE_LOG(LogTemp, Log, TEXT("Helika Actor is not yet initialized"));
-    }
-
-    // adding unique id to event
-    TSharedPtr<FJsonObject> newEvent = MakeShareable(new FJsonObject());
-    newEvent->SetStringField("id", FGuid::NewGuid().ToString());
-    newEvent->SetObjectField("events", eventProps);
-
-    // converting Json object to string
-    FString JsonString;
-    TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JsonString);
-    FJsonSerializer::Serialize(newEvent.ToSharedRef(), Writer);
-
-    // send event to helika API
-    SendHTTPPost("/game/game-event", JsonString);
+    UE_LOG(LogTemp, Display, TEXT("Helika Server Responce : %s"), *Data);
 }

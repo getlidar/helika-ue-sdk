@@ -4,17 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Misc/Guid.h"
-#include "Misc/DateTime.h"
 #include "Containers/UnrealString.h"
 #include "HelikaActor.generated.h"
 
 UENUM(BlueprintType)
-enum class HelikaEnvironment : uint8
+enum class EHelikaEnvironment : uint8
 {
-    Localhost,
-    Develop,
-    Production
+    HE_Localhost UMETA(DisplayName = "Localhost"),
+    HE_Develop UMETA(DisplayName = "Develop"),
+    HE_Production UMETA(DisplayName = "Production")
 };
 
 UENUM(BlueprintType)
@@ -31,41 +29,11 @@ enum class EPlatformType : uint8
 };
 
 UENUM(BlueprintType)
-enum class TelemetryLevel : uint8
+enum class ETelemetryLevel : uint8
 {
-    None = 0 UMETA(DisplayName = "None"),
-    TelemetryOnly = 100 UMETA(DisplayName = "TelemetryOnly"),
-    All = 200 UMETA(DisplayName = "All"),
-};
-
-USTRUCT(BlueprintType)
-struct FHEvent
-{
-    GENERATED_BODY()
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Helika)
-    FString game_id;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Helika)
-    FString event_type;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Helika)
-    TMap<FString, FString> event;
-
-    UPROPERTY()
-    FString created_at;
-};
-
-USTRUCT(BlueprintType)
-struct FHSession
-{
-    GENERATED_BODY()
-
-    UPROPERTY()
-    FString id;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Helika)
-    TArray<FHEvent> events;
+    TL_None = 0 UMETA(DisplayName = "None"),
+    TL_TelemetryOnly = 100 UMETA(DisplayName = "TelemetryOnly"),
+    TL_All = 200 UMETA(DisplayName = "All"),
 };
 
 UCLASS()
@@ -81,30 +49,32 @@ protected:
 
 public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Helika)
-    FString apiKey;
+    FString ApiKey;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Helika)
-    FString gameId;
+    FString GameId;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Helika)
-    FString playerId;
+    FString PlayerId;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Helika)
-    HelikaEnvironment helikaEnv;
+    EHelikaEnvironment HelikaEnvironment = EHelikaEnvironment::HE_Localhost;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Helika)
-    TelemetryLevel telemetry = TelemetryLevel::All;
+    ETelemetryLevel Telemetry = ETelemetryLevel::TL_All;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Helika)
-    bool printEventsToConsole = false;
+    bool bPrintEventsToConsole = false;
 
-    void Init(FString apiKeyIn, FString gameIdIN, HelikaEnvironment env, TelemetryLevel telemetryLevel = TelemetryLevel::All, bool isPrintEventsToConsole = false);
+    void Init(const FString& InApiKey, const FString& InGameId, EHelikaEnvironment InHelikaEnvironment, ETelemetryLevel InTelemetryLevel = ETelemetryLevel::TL_All, bool bInPrintEventsToConsole = false);
 
+    // Set weather to print events to console or not
     UFUNCTION(BlueprintCallable, Category = "Helika")
-    void SendEvent(FHSession helikaEvents);
+    void SetPrintToConsole(bool bInPrintEventsToConsole);
 
-    // Overloaded method using JsonObject
-    void SendEvent(const TSharedPtr<FJsonObject>& helikaEvents);
+    // Get the player ID
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Helika")
+    FString GetPlayerId();
 
     // Sets the player ID
     UFUNCTION(BlueprintCallable, Category = "Helika")
@@ -112,53 +82,55 @@ public:
 
     // Get Current Platform type (Windows, Mac, Android, IOS, Linux, etc.) return as enum
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Helika")
-    EPlatformType GetPlatformType();
+    static EPlatformType GetPlatformType();
 
     // Get Current Platform name (Windows, Mac, Android, IOS, Linux, etc.) return in FString
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Helika")
-    FString GetPlatformName();
+    static FString GetPlatformName();
 
     // Get the device unique identifier
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Helika")
-    FString GetDeviceUniqueIdentifier();
+    static FString GetDeviceUniqueIdentifier();
 
-    void SendCustomEvent(const TSharedPtr<FJsonObject>& eventProps);
+    void SendCustomEvent(TSharedPtr<FJsonObject> EventProps) const;
+    
+    void SendCustomEvents(TArray<TSharedPtr<FJsonObject>> EventProps) const;
 
 private:
-    FString _helikaApiKey;
+    FString HelikaApiKey;
 
-    FString _sdk_name = "Unreal";
+    FString SDKName = "Unreal";
 
-    FString _sdk_version = "0.1.1";
+    FString SDKVersion = "0.1.1";
 
-    FString _sdk_class = "HelikaActor";
+    FString SDKClass = "HelikaActor";
 
-    void SendHTTPPost(FString url, FString data);
+    static void ProcessEventTrackResponse(const FString& Data);
 
-    void ProcessEventTrackResponse(FString data);
+    void AppendAttributesToJsonObject(const TSharedPtr<FJsonObject>& JsonObject) const;
 
-    void CreateSession();
+    void CreateSession() const;
+    
+    void SendHTTPPost(const FString& Url, const FString& Data) const;
 
-    FString ConvertUrl(HelikaEnvironment baseUrl);
+    static void AddIfNull(const TSharedPtr<FJsonObject>& HelikaEvent, const FString& Key, const FString& NewValue);
 
+    static void AddOrReplace(const TSharedPtr<FJsonObject>& HelikaEvent, const FString& Key, const FString& NewValue);
+    
+    static FString ConvertUrl(const EHelikaEnvironment InHelikaEnvironment);
+    
     // Get the device type (Desktop, Mobile, Console, etc.)
-    FString GetDeviceType();
-    FString GetDeviceProcessorType();
+    static FString GetDeviceType();
+    
+    static FString GetDeviceProcessorType();
 
 protected:
-    FString _baseUrl;
-
-    FString _gameId;
-
-    FString _sessionID;
-
-    FString _playerId;
-
-    FString _deviceId;
-
-    bool _isInitialized = false;
-
-    bool _printEventsToConsole = false;
-
-    TelemetryLevel _telemetry = TelemetryLevel::All;
+    
+    FString BaseUrl;
+    
+    FString SessionId;
+    
+    FString DeviceId;
+    
+    bool bIsInitialized = false;
 };
