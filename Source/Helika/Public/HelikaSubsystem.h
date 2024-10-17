@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Subsystems/EngineSubsystem.h"
 #include "HelikaSubsystem.generated.h"
+class UHelikaManager;
 /**
  * 
  */
@@ -20,5 +21,8 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 	// End USubsystem
+
+	UFUNCTION(BlueprintCallable, Category="Helika")
+	UHelikaManager* GetHelikaManager();
 	
 };
