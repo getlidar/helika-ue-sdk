@@ -34,6 +34,15 @@ public class Helika : ModuleRules
                 "JsonUtilities"
             }
 			);
+
+		if (Target.bBuildEditor)
+		{
+			PublicDependencyModuleNames.AddRange(
+				new string[]
+				{
+					"UnrealEd"	
+				});
+		}
 			
 		
 		PrivateDependencyModuleNames.AddRange(

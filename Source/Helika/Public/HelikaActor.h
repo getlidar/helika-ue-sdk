@@ -2,39 +2,10 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "HelikaTypes.h"
 #include "GameFramework/Actor.h"
 #include "Containers/UnrealString.h"
 #include "HelikaActor.generated.h"
-
-UENUM(BlueprintType)
-enum class EHelikaEnvironment : uint8
-{
-    HE_Localhost UMETA(DisplayName = "Localhost"),
-    HE_Develop UMETA(DisplayName = "Develop"),
-    HE_Production UMETA(DisplayName = "Production")
-};
-
-UENUM(BlueprintType)
-enum class EPlatformType : uint8
-{
-    PT_DEFAULT UMETA(DisplayName = "Default"),
-    PT_WINDOWS UMETA(DisplayName = "Windows"),
-    PT_MAC UMETA(DisplayName = "Mac"),
-    PT_LINUX UMETA(DisplayName = "Linux"),
-    PT_IOS UMETA(DisplayName = "IOS"),
-    PT_ANDROID UMETA(DisplayName = "Android"),
-    PT_CONSOLE UMETA(DisplayName = "Console"),
-    PT_UNKNOWN UMETA(DisplayName = "Unknown")
-};
-
-UENUM(BlueprintType)
-enum class ETelemetryLevel : uint8
-{
-    TL_None = 0 UMETA(DisplayName = "None"),
-    TL_TelemetryOnly = 100 UMETA(DisplayName = "TelemetryOnly"),
-    TL_All = 200 UMETA(DisplayName = "All"),
-};
 
 UCLASS()
 class HELIKA_API AHelikaActor : public AActor
@@ -97,8 +68,6 @@ public:
     void SendCustomEvents(TArray<TSharedPtr<FJsonObject>> EventProps) const;
 
 private:
-    FString HelikaApiKey;
-
     FString SDKName = "Unreal";
 
     FString SDKVersion = "0.1.1";
