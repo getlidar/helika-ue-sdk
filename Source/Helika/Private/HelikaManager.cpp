@@ -93,38 +93,84 @@ void UHelikaManager::SendCustomEvents(TArray<FHelikaJsonObject> EventProps) cons
 	}
 
 	SendCustomEvents(JsonArray);
-}
+	
+} 
 
-void UHelikaManager::SendEvent(FString EventName, TSharedPtr<FJsonObject> EventProps) const
+bool UHelikaManager::SendEvent(FString EventName, TSharedPtr<FJsonObject> EventProps) const
 {
 	if(!bIsInitialized)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Helika Subsystem is not yet initialized"));
+		UE_LOG(LogHelika, Error, TEXT("Helika Subsystem is not yet initialized"));
+		return false;
+	} 
+	if(EventName.IsEmpty())
+	{
+		UE_LOG(LogHelika, Error, TEXT("'Event Name' cannot be empty"));
+		return false;
 	}
+	
+	FString TrimmedEvent = EventName.TrimStartAndEnd();
+	if(TrimmedEvent.IsEmpty())
+	{
+		UE_LOG(LogHelika, Error, TEXT("'Event Name' trimmed cannot be empty"));
+		return false;
+	}
+
+	if(!EventProps.IsValid())
+	{
+		UE_LOG(LogHelika, Error, TEXT("'Event Props' cannot be null"));
+		return false;
+	}
+	
 	
 	// adding unique id to event
 	const TSharedPtr<FJsonObject> FinalEvent = MakeShareable(new FJsonObject());
 	FinalEvent->SetStringField("id", FGuid::NewGuid().ToString());
 	
 	TArray<TSharedPtr<FJsonValue>> EventArrayJsonObject;
-	const TSharedPtr<FJsonValueObject> JsonValueObject = MakeShareable(new FJsonValueObject(AppendAttributesToJsonObject(EventName, EventProps)));
+	const TSharedPtr<FJsonValueObject> JsonValueObject = MakeShareable(new FJsonValueObject(AppendAttributesToJsonObject(TrimmedEvent, EventProps)));
 	EventArrayJsonObject.Add(JsonValueObject);
 	FinalEvent->SetArrayField("events", EventArrayJsonObject);
 	
 	// converting Json object to string
 	FString JsonString;
 	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JsonString);
-	FJsonSerializer::Serialize(FinalEvent.ToSharedRef(), Writer);
+	if(!FJsonSerializer::Serialize(FinalEvent.ToSharedRef(), Writer))
+	{
+		UE_LOG(LogHelika, Error, TEXT("Failed to serialize event data to JSON"));
+		return false;
+	}
 
 	// send event to helika API
 	SendHTTPPost("/game/game-event", JsonString);
+	return true;
 }
 
-void UHelikaManager::SendEvents(FString EventName, TArray<TSharedPtr<FJsonObject>> EventProps) const
+bool UHelikaManager::SendEvents(FString EventName, TArray<TSharedPtr<FJsonObject>> EventProps) const
 {
 	if(!bIsInitialized)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Helika Subsystem is not yet initialized"));
+		UE_LOG(LogHelika, Log, TEXT("Helika Subsystem is not yet initialized"));
+		return false;
+	}
+
+	if(EventProps.IsEmpty())
+	{
+		UE_LOG(LogHelika, Error, TEXT("'Event Props' cannot be empty"));
+		return false;
+	}
+
+	if(EventName.IsEmpty())
+	{
+		UE_LOG(LogHelika, Error, TEXT("'Event Name' cannot be empty"));
+		return false;
+	}
+	
+	FString TrimmedEvent = EventName.TrimStartAndEnd();
+	if(TrimmedEvent.IsEmpty())
+	{
+		UE_LOG(LogHelika, Error, TEXT("'Event Name' cannot be empty"));
+		return false;
 	}
 
 	const TSharedPtr<FJsonObject> FinalEvent = MakeShareable(new FJsonObject());
@@ -132,8 +178,8 @@ void UHelikaManager::SendEvents(FString EventName, TArray<TSharedPtr<FJsonObject
     
 	TArray<TSharedPtr<FJsonValue>> EventArrayJsonObject;
 	for (auto EventProp : EventProps)
-	{        
-		const TSharedPtr<FJsonValueObject> JsonValueObject = MakeShareable(new FJsonValueObject(AppendAttributesToJsonObject(EventName, EventProp)));
+	{
+		const TSharedPtr<FJsonValueObject> JsonValueObject = MakeShareable(new FJsonValueObject(AppendAttributesToJsonObject(TrimmedEvent, EventProp)));
 		EventArrayJsonObject.Add(JsonValueObject);
 	}        
 	FinalEvent->SetArrayField("events", EventArrayJsonObject);
@@ -141,10 +187,16 @@ void UHelikaManager::SendEvents(FString EventName, TArray<TSharedPtr<FJsonObject
 	// converting Json object to string
 	FString JsonString;
 	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JsonString);
-	FJsonSerializer::Serialize(FinalEvent.ToSharedRef(), Writer);
+	if(!FJsonSerializer::Serialize(FinalEvent.ToSharedRef(), Writer))
+	{
+		UE_LOG(LogHelika, Error, TEXT("Failed to serialize event data to JSON"));
+		return false;
+	}
 
 	// send event to helika API
-	SendHTTPPost("/game/game-event", JsonString);  
+	SendHTTPPost("/game/game-event", JsonString);
+
+	return true;
 }
 
 
@@ -157,12 +209,25 @@ void UHelikaManager::SendEvents(FString EventName, TArray<TSharedPtr<FJsonObject
 /// SendCustomEvent(EventData);
 /// 
 /// @param EventProps Event data in form of json object
-void UHelikaManager::SendCustomEvent(TSharedPtr<FJsonObject> EventProps) const
+bool UHelikaManager::SendCustomEvent(TSharedPtr<FJsonObject> EventProps) const
 {
     if(!bIsInitialized)
     {
-        UE_LOG(LogTemp, Log, TEXT("Helika Subsystem is not yet initialized"));
+        UE_LOG(LogHelika, Log, TEXT("Helika Subsystem is not yet initialized"));
+    	return false;
     }
+
+	if(!EventProps.IsValid())
+	{
+		UE_LOG(LogHelika, Error, TEXT("'Event Props' cannot be null"));
+		return false;
+	}
+
+	if(!EventProps->HasField(TEXT("event_type")) || EventProps->GetStringField(TEXT("event_type")).IsEmpty())
+	{
+		UE_LOG(LogHelika, Error, TEXT("Invalid Event: Missing 'event_type' field or empty 'event_type' field"));
+		return false;
+	}
 
     // adding unique id to event
     const TSharedPtr<FJsonObject> NewEvent = MakeShareable(new FJsonObject());
@@ -176,10 +241,15 @@ void UHelikaManager::SendCustomEvent(TSharedPtr<FJsonObject> EventProps) const
     // converting Json object to string
     FString JsonString;
     const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JsonString);
-    FJsonSerializer::Serialize(NewEvent.ToSharedRef(), Writer);
-
+	if(!FJsonSerializer::Serialize(NewEvent.ToSharedRef(), Writer))
+	{
+		UE_LOG(LogHelika, Error, TEXT("Failed to serialize event data to JSON"));
+		return false;
+	}
+	
     // send event to helika API
     SendHTTPPost("/game/game-event", JsonString);
+	return true;
 }
 
 ///
@@ -200,19 +270,31 @@ void UHelikaManager::SendCustomEvent(TSharedPtr<FJsonObject> EventProps) const
 /// SendCustomEvents(Array);
 /// 
 /// @param EventProps Event data in form of json[] object
-void UHelikaManager::SendCustomEvents(TArray<TSharedPtr<FJsonObject>> EventProps) const
+bool UHelikaManager::SendCustomEvents(TArray<TSharedPtr<FJsonObject>> EventProps) const
 {
     if(!bIsInitialized)
     {
-        UE_LOG(LogTemp, Log, TEXT("Helika Subsystem is not yet initialized"));
+        UE_LOG(LogHelika, Log, TEXT("Helika Subsystem is not yet initialized"));
+    	return false;
     }
+	
+	if(EventProps.IsEmpty())
+	{
+		UE_LOG(LogHelika, Error, TEXT("'Event Props' cannot be empty"));
+		return false;
+	}
 
     const TSharedPtr<FJsonObject> NewEvent = MakeShareable(new FJsonObject());
     NewEvent->SetStringField("id", FGuid::NewGuid().ToString());
     
     TArray<TSharedPtr<FJsonValue>> EventArrayJsonObject;
     for (auto EventProp : EventProps)
-    {        
+    {
+    	if(!EventProp->HasField(TEXT("event_type")) || EventProp->GetStringField(TEXT("event_type")).IsEmpty())
+    	{
+    		UE_LOG(LogHelika, Error, TEXT("Invalid Event: Missing 'event_type' field or empty 'event_type' field"));
+    		return false;
+    	}
         const TSharedPtr<FJsonValueObject> JsonValueObject = MakeShareable(new FJsonValueObject(AppendAttributesToJsonObject(EventProp)));
         EventArrayJsonObject.Add(JsonValueObject);
     }        
@@ -221,14 +303,25 @@ void UHelikaManager::SendCustomEvents(TArray<TSharedPtr<FJsonObject>> EventProps
     // converting Json object to string
     FString JsonString;
     const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JsonString);
-    FJsonSerializer::Serialize(NewEvent.ToSharedRef(), Writer);
+	if(!FJsonSerializer::Serialize(NewEvent.ToSharedRef(), Writer))
+	{
+		UE_LOG(LogHelika, Error, TEXT("Failed to serialize event data to JSON"));
+		return false;
+	}
 
     // send event to helika API
-    SendHTTPPost("/game/game-event", JsonString);    
+    SendHTTPPost("/game/game-event", JsonString); 
+
+	return true;
 }
 
 void UHelikaManager::SetPlayerId(const FString& InPlayerId)
 {
+	if(InPlayerId.IsEmpty() || InPlayerId.TrimStartAndEnd().IsEmpty())
+	{
+		UE_LOG(LogHelika, Error, TEXT("Player Id cannot be set to empty"));
+		return;
+	}
 	UHelikaLibrary::GetHelikaSettings()->PlayerId = InPlayerId;
 }
 
@@ -242,6 +335,16 @@ void UHelikaManager::SetPrintToConsole(bool bInPrintEventsToConsole)
 	UHelikaLibrary::GetHelikaSettings()->bPrintEventsToConsole = bInPrintEventsToConsole;
 }
 
+bool UHelikaManager::IsSDKInitialized()
+{
+	return bIsInitialized;
+}
+
+FString UHelikaManager::GetSessionId() const
+{
+	return SessionId;
+}
+
 TSharedPtr<FJsonObject> UHelikaManager::AppendAttributesToJsonObject(TSharedPtr<FJsonObject> JsonObject) const
 {
 	// Add game_id only if the event doesn't already have it
@@ -250,11 +353,6 @@ TSharedPtr<FJsonObject> UHelikaManager::AppendAttributesToJsonObject(TSharedPtr<
 	// Convert to ISO 8601 format string using "o" specifier
 	UHelikaLibrary::AddOrReplace(JsonObject, "created_at", FDateTime::UtcNow().ToIso8601());
 
-	if(!JsonObject->HasField(TEXT("event_type")) || JsonObject->GetStringField(TEXT("event_type")).IsEmpty())
-	{
-		UE_LOG(LogTemp, Error, TEXT("Invalid Event: Missing 'event_type' field"));
-	}
-
 	if(!JsonObject->HasField(TEXT("event")))
 	{
 		JsonObject->SetObjectField(TEXT("event"), MakeShareable(new FJsonObject()));
@@ -262,7 +360,7 @@ TSharedPtr<FJsonObject> UHelikaManager::AppendAttributesToJsonObject(TSharedPtr<
 
 	if(JsonObject->GetObjectField(TEXT("event")) == nullptr)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Invalid Event: 'event' field must be of type [JsonObject]"));
+		UE_LOG(LogHelika, Error, TEXT("Invalid Event: 'event' field must be of type [JsonObject]"));
 	}
 
 	const TSharedPtr<FJsonObject> InternalEvent = JsonObject->GetObjectField(TEXT("event"));
@@ -283,7 +381,10 @@ TSharedPtr<FJsonObject> UHelikaManager::AppendAttributesToJsonObject(const FStri
 	HelikaEvent->SetStringField("created_at", FDateTime::UtcNow().ToIso8601());
 	HelikaEvent->SetStringField("event_type", EventName);
 
-	JsonObject->SetStringField("session_id", SessionId);
+	if(!SessionId.IsEmpty())
+	{
+		JsonObject->SetStringField("session_id", SessionId);
+	}
 	if(!UHelikaLibrary::GetHelikaSettings()->PlayerId.IsEmpty())
 	{
 		JsonObject->SetStringField("player_id", UHelikaLibrary::GetHelikaSettings()->PlayerId);
@@ -338,8 +439,6 @@ void UHelikaManager::CreateSession() const
     const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JSONPayload);
     FJsonSerializer::Serialize(Event.ToSharedRef(), Writer);
 
-	UE_LOG(LogHelika, Log, TEXT("Helika Event : %s"), *JSONPayload);
-	GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Green, FString::Printf(TEXT("Helika Event : %s"), *JSONPayload));
     SendHTTPPost("/game/game-event", JSONPayload);
 }
 
@@ -347,7 +446,7 @@ void UHelikaManager::SendHTTPPost(const FString& Url, const FString& Data) const
 {
 	if (UHelikaLibrary::GetHelikaSettings()->bPrintEventsToConsole)
 	{
-		UE_LOG(LogTemp, Display, TEXT("Sent Helika Event : %s"), *Data);
+		UE_LOG(LogHelika, Display, TEXT("Sent Helika Event : %s"), *Data);
 		return;
 	}
 	if (Telemetry > ETelemetryLevel::TL_None)
@@ -379,9 +478,9 @@ void UHelikaManager::SendHTTPPost(const FString& Url, const FString& Data) const
 					switch (Request->GetFailureReason())
 					{
 					case EHttpFailureReason::ConnectionError:
-						UE_LOG(LogTemp, Error, TEXT("Connection failed."));
+						UE_LOG(LogHelika, Error, TEXT("Connection failed."));
 					default:
-						UE_LOG(LogTemp, Error, TEXT("Request failed."));
+						UE_LOG(LogHelika, Error, TEXT("Request failed."));
 					}
 				}
 			});
@@ -392,7 +491,7 @@ void UHelikaManager::SendHTTPPost(const FString& Url, const FString& Data) const
 
 void UHelikaManager::ProcessEventTrackResponse(const FString& Data)
 {
-	UE_LOG(LogTemp, Display, TEXT("Helika Server Responce : %s"), *Data);
+	UE_LOG(LogHelika, Display, TEXT("Helika Server Responce : %s"), *Data);
 }
 
 void UHelikaManager::EndSession(bool bIsSimulating)
