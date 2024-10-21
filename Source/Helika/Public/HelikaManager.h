@@ -35,6 +35,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Helika")
 	void InitializeSDK();
+	UFUNCTION(BlueprintCallable, Category = "Helika")
 	void DeinitializeSDK();
 
 	UFUNCTION(BlueprintCallable, Category="Helika|Events")
@@ -48,11 +49,11 @@ public:
 	void SendCustomEvents(TArray<FHelikaJsonObject> EventProps) const;
 
 	
-	void SendEvent(FString EventName, TSharedPtr<FJsonObject> EventProps) const;
-	void SendEvents(FString EventName, TArray<TSharedPtr<FJsonObject>> EventProps) const;
+	bool SendEvent(FString EventName, TSharedPtr<FJsonObject> EventProps) const;
+	bool SendEvents(FString EventName, TArray<TSharedPtr<FJsonObject>> EventProps) const;
 	
-	void SendCustomEvent(TSharedPtr<FJsonObject> EventProps) const;    
-	void SendCustomEvents(TArray<TSharedPtr<FJsonObject>> EventProps) const;
+	bool SendCustomEvent(TSharedPtr<FJsonObject> EventProps) const;    
+	bool SendCustomEvents(TArray<TSharedPtr<FJsonObject>> EventProps) const;
 
 	// Sets the player ID
 	UFUNCTION(BlueprintCallable, Category="Helika")
@@ -65,6 +66,12 @@ public:
 	// Set weather to print events to console or not
 	UFUNCTION(BlueprintCallable, Category="Helika")
 	void SetPrintToConsole(bool bInPrintEventsToConsole);
+
+	UFUNCTION(BlueprintCallable, Category = "Helika")
+	bool IsSDKInitialized();
+
+	UFUNCTION(BlueprintCallable, Category = "Helika")
+	FString GetSessionId() const;
 
 protected:
 	FString BaseUrl;
