@@ -36,6 +36,12 @@ public:
 	UPROPERTY(Config, EditAnywhere, Category = "Helika")
 	bool bPrintEventsToConsole;
 
+	UPROPERTY(Config, EditAnywhere, Category = "Helika")
+	FString KochavaAppId;
+
+	UPROPERTY(Config, EditAnywhere, Category = "Helika")
+	FString AppVersion;
+
 	UPROPERTY(Config, VisibleAnywhere, Category = "Helika")
 	FString SDKName = "Unreal";
 	

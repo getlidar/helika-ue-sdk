@@ -1,5 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
+using System.IO;
 using UnrealBuildTool;
 
 public class Helika : ModuleRules
@@ -31,7 +32,9 @@ public class Helika : ModuleRules
                 "InputCore",
                 "HTTP",
                 "Json",
-                "JsonUtilities"
+                "JsonUtilities",
+                "Sockets",
+                "Networking"
             }
 			);
 
@@ -63,5 +66,14 @@ public class Helika : ModuleRules
 				// ... add any modules that your module loads dynamically here ...
 			}
 			);
+
+		if (Target.Platform == UnrealTargetPlatform.IOS)
+		{
+			PublicFrameworks.AddRange(new string[]
+			{
+				"AdSupport",
+				"AppTrackingTransparency"
+			});
+		}
 	}
 }

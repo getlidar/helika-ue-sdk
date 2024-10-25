@@ -3,7 +3,22 @@
 
 #include "HelikaLibrary.h"
 #include "Helika.h"
+#include "HelikaDefines.h"
 #include "HelikaTypes.h"
+#include "IPAddress.h"
+#include "SocketSubsystem.h"
+#if PLATFORM_IOS
+
+#include <UIKit/UIKit.h>
+#include <Foundation/Foundation.h>
+
+#import <AppTrackingTransparency/AppTrackingTransparency.h>
+#import <AdSupport/AdSupport.h>
+
+#endif
+#if PLATFORM_ANDROID
+#include "Android/AndroidPlatformMisc.h"
+#endif
 
 
 UHelikaSettings* UHelikaLibrary::GetHelikaSettings()
@@ -138,6 +153,41 @@ FString UHelikaLibrary::GetDeviceProcessor()
     return FString();
 }
 
+int64 UHelikaLibrary::GetUnixTimeLong()
+{
+    const FDateTime Now = FDateTime::UtcNow();
+    const FDateTime UnixEpoch(1970, 1, 1);
+    const FTimespan TimeSinceEpoch = Now - UnixEpoch;
+    return TimeSinceEpoch.GetTotalSeconds();
+}
+
+FString UHelikaLibrary::GetOSVersion()
+{    
+    FString OSVersionLabel, OSSubVersionLabel;
+    FPlatformMisc::GetOSVersions(OSVersionLabel,OSSubVersionLabel);
+    return OSVersionLabel + OSSubVersionLabel;
+}
+
+FString UHelikaLibrary::GetLocalIpAddress()
+{
+    bool bCanBindAll = false;
+    TSharedPtr<FInternetAddr> LocalIp = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetLocalHostAddr(*GLog, bCanBindAll);
+    return (LocalIp->IsValid() ? LocalIp->ToString(false) : FString());
+}
+
+TSharedPtr<FJsonObject> UHelikaLibrary::GetDeviceIDs()
+{
+    TSharedPtr<FJsonObject> DeviceIds = MakeShareable(new FJsonObject());
+#if PLATFORM_ANDROID
+    DeviceIds->SetStringField("adid", GetAndroidAdID());
+    DeviceIds->SetStringField("android_id", GetDeviceUniqueIdentifier());    
+#elif PLATFORM_IOS
+    DeviceIds->SetStringField("idfa", GetIdfa());
+    DeviceIds->SetStringField("idfv", GetIdfv());
+#endif
+    return DeviceIds;
+}
+
 void UHelikaLibrary::AddIfNull(const TSharedPtr<FJsonObject>& HelikaEvent, const FString& Key, const FString& NewValue)
 {
     if(!HelikaEvent->HasField(Key))
@@ -156,6 +206,63 @@ void UHelikaLibrary::AddOrReplace(const TSharedPtr<FJsonObject>& HelikaEvent, co
     {
         HelikaEvent->SetStringField(Key, NewValue);
     }
+}
+
+FString UHelikaLibrary::GetIdfv()
+{
+    FString IDFVID;
+
+#if PLATFORM_IOS
+    NSString* VendorID = [[UIDevice currentDevice] identifierForVendor].UUIDString;
+    IDFVID = FString(VendorID);
+#endif
+
+    return IDFVID;
+}
+
+FString UHelikaLibrary::GetIdfa()
+{
+#if PLATFORM_IOS
+
+    ATTrackingManagerAuthorizationStatus status = [ATTrackingManager trackingAuthorizationStatus];
+	
+    switch (status) {
+    case ATTrackingManagerAuthorizationStatusAuthorized: {
+            NSUUID* IDFAUUID = [[ASIdentifierManager sharedManager] advertisingIdentifier];
+            NSString* ConvertedString = [IDFAUUID UUIDString];
+            return Fstring(ConvertedString);
+    }
+    case ATTrackingManagerAuthorizationStatusDenied: {
+            UE_LOG(LogHelika, Warning, TEXT("Tracking not authorized"));
+            return FString();
+    }
+    case ATTrackingManagerAuthorizationStatusNotDetermined: {
+            UE_LOG(LogHelika, Warning, TEXT("Tracking not Determined"));
+            return FString();
+    }
+    case ATTrackingManagerAuthorizationStatusRestricted: {
+            UE_LOG(LogHelika, Warning, TEXT("Tracking restricted"));
+            return FString();
+    }
+    default: {
+            UE_LOG(LogHelika, Warning, TEXT("Tracking status unknown"));
+            return FString();
+    }
+    }
+
+#else
+    UE_LOG(LogHelika, Log, TEXT("Incompatible Platform ..!"));
+    return FString();
+#endif
+	
+}
+
+FString UHelikaLibrary::GetAndroidAdID()
+{
+#if PLATFORM_ANDROID
+    return FAndroidMisc::GetUniqueAdvertisingId();
+#endif
+    return "Unknown";
 }
 
 

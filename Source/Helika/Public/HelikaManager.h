@@ -73,11 +73,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Helika")
 	FString GetSessionId() const;
 
+	UFUNCTION(BlueprintCallable, Category = "Helika")
+	FString GetKochavaDeviceId();
+
+	TSharedPtr<FJsonObject> CreateInstallEvent();
+
 protected:
 	FString BaseUrl;
 	FString SessionId;
 	ETelemetryLevel Telemetry = ETelemetryLevel::TL_None;
 	bool bIsInitialized = false;
+	FString KochavaDeviceID;
 
 private:
 	TSharedPtr<FJsonObject> AppendAttributesToJsonObject(TSharedPtr<FJsonObject> JsonObject) const;
@@ -86,4 +92,8 @@ private:
 	void SendHTTPPost(const FString& Url, const FString& Data) const;
 	static void ProcessEventTrackResponse(const FString& Data);
 	static void EndSession(bool bIsSimulating);
+	FString GenerateKochavaDeviceID();
+
+	UFUNCTION(BlueprintCallable, Category = "Helika")
+	void InitializeTracking();
 };

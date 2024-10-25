@@ -10,8 +10,28 @@
 #include "HttpModule.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
+#if PLATFORM_ANDROID
+
+#include "Android/AndroidPlatformMisc.h"
+
+#include "Android/AndroidJNI.h"
+#include "Android/AndroidApplication.h"
+#include "Misc/OutputDeviceNull.h"
+
+#endif
 #if WITH_EDITOR
 #include "Editor.h"
+#endif
+
+
+#if PLATFORM_IOS
+
+#include <UIKit/UIKit.h>
+#include <Foundation/Foundation.h>
+
+#import <AppTrackingTransparency/AppTrackingTransparency.h>
+#import <AdSupport/AdSupport.h>
+
 #endif
 
 UHelikaManager* UHelikaManager::Instance = nullptr;
@@ -39,6 +59,7 @@ void UHelikaManager::InitializeSDK()
 	BaseUrl = UHelikaLibrary::ConvertUrl(UHelikaLibrary::GetHelikaSettings()->HelikaEnvironment);
 	SessionId = UHelikaLibrary::CreateNewGuid();
 	bIsInitialized = true;
+	KochavaDeviceID = GenerateKochavaDeviceID();
 
 	// If Localhost is set, force print events
 	Telemetry = UHelikaLibrary::GetHelikaSettings()->HelikaEnvironment != EHelikaEnvironment::HE_Localhost ? UHelikaLibrary::GetHelikaSettings()->Telemetry : ETelemetryLevel::TL_None;
@@ -150,7 +171,7 @@ bool UHelikaManager::SendEvents(FString EventName, TArray<TSharedPtr<FJsonObject
 {
 	if(!bIsInitialized)
 	{
-		UE_LOG(LogHelika, Log, TEXT("Helika Subsystem is not yet initialized"));
+		UE_LOG(LogHelika, Warning, TEXT("Helika Subsystem is not yet initialized"));
 		return false;
 	}
 
@@ -179,6 +200,11 @@ bool UHelikaManager::SendEvents(FString EventName, TArray<TSharedPtr<FJsonObject
 	TArray<TSharedPtr<FJsonValue>> EventArrayJsonObject;
 	for (auto EventProp : EventProps)
 	{
+		if(!EventProp.IsValid())
+		{
+			UE_LOG(LogHelika, Error, TEXT("'Event Props' contains invalid/null object"));
+			return false;
+		}
 		const TSharedPtr<FJsonValueObject> JsonValueObject = MakeShareable(new FJsonValueObject(AppendAttributesToJsonObject(TrimmedEvent, EventProp)));
 		EventArrayJsonObject.Add(JsonValueObject);
 	}        
@@ -345,6 +371,11 @@ FString UHelikaManager::GetSessionId() const
 	return SessionId;
 }
 
+FString UHelikaManager::GetKochavaDeviceId()
+{
+	return KochavaDeviceID;
+}
+
 TSharedPtr<FJsonObject> UHelikaManager::AppendAttributesToJsonObject(TSharedPtr<FJsonObject> JsonObject) const
 {
 	// Add game_id only if the event doesn't already have it
@@ -410,9 +441,7 @@ void UHelikaManager::CreateSession() const
     // TelemetryOnly means not sending Device, and Os information
     if (Telemetry > ETelemetryLevel::TL_TelemetryOnly)
     {
-        FString OSVersionLabel, OSSubVersionLabel;
-        FPlatformMisc::GetOSVersions(OSVersionLabel,OSSubVersionLabel);
-        InternalEvent->SetStringField("os", OSVersionLabel + OSSubVersionLabel);
+        InternalEvent->SetStringField("os", UHelikaLibrary::GetOSVersion());
         InternalEvent->SetStringField("os_family", UHelikaLibrary::GetPlatformName());
         InternalEvent->SetStringField("device_model", FPlatformMisc::GetDeviceMakeAndModel());
         InternalEvent->SetStringField("device_name", FPlatformProcess::ComputerName());
@@ -475,13 +504,7 @@ void UHelikaManager::SendHTTPPost(const FString& Url, const FString& Data) const
 				}
 				else
 				{
-					switch (Request->GetFailureReason())
-					{
-					case EHttpFailureReason::ConnectionError:
-						UE_LOG(LogHelika, Error, TEXT("Connection failed."));
-					default:
-						UE_LOG(LogHelika, Error, TEXT("Request failed."));
-					}
+					UE_LOG(LogHelika, Error, TEXT("Request failed..! due to %s"), LexToString(Request->GetFailureReason()));
 				}
 			});
 
@@ -497,4 +520,49 @@ void UHelikaManager::ProcessEventTrackResponse(const FString& Data)
 void UHelikaManager::EndSession(bool bIsSimulating)
 {
 	Get()->DeinitializeSDK();
+}
+
+FString UHelikaManager::GenerateKochavaDeviceID()
+{
+	FString KochavaDeviceId = FString::Printf(TEXT("KD%lldT%s"), UHelikaLibrary::GetUnixTimeLong(), *FGuid::NewGuid().ToString(EGuidFormats::Digits).ToUpper());
+	
+	return KochavaDeviceId;
+}
+
+void UHelikaManager::InitializeTracking()
+{
+#if PLATFORM_IOS
+
+	if (@available(iOS 14, *)) {
+		[ATTrackingManager requestTrackingAuthorizationWithCompletionHandler:^(ATTrackingManagerAuthorizationStatus status) {
+			switch (status) {
+				case ATTrackingManagerAuthorizationStatusAuthorized: {
+					UE_LOG(LogHelika, Log, TEXT("Tracking Authorized"));
+					break;
+				}
+				case ATTrackingManagerAuthorizationStatusDenied: {
+					UE_LOG(LogHelika, Log, TEXT("Tracking Denied"));
+					break;
+				}
+				case ATTrackingManagerAuthorizationStatusNotDetermined: {
+					UE_LOG(LogHelika, Log, TEXT("Tracking Not Determined"));
+					break;
+				}
+				case ATTrackingManagerAuthorizationStatusRestricted: {
+					UE_LOG(LogHelika, Log, TEXT("Tracking Restricted"));
+					break;
+				}
+				default: {
+					UE_LOG(LogHelika, Log, TEXT("Tracking Status unknown"));
+					break;
+				}
+			}
+		}];
+	} else {
+		UE_LOG(LogHelika, Log, TEXT("Tracking Authorized"));
+	}	
+#else
+	UE_LOG(LogHelika, Log, TEXT("Tracking Different platform..!"));
+#endif
+	
 }
