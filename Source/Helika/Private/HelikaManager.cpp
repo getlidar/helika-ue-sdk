@@ -566,3 +566,35 @@ void UHelikaManager::InitializeTracking()
 #endif
 	
 }
+
+TSharedPtr<FJsonObject> UHelikaManager::CreateInstallEvent()
+{
+	TSharedPtr<FJsonObject> InstallEvent = MakeShareable(new FJsonObject());
+	InstallEvent->SetStringField("action", TEXT("install"));
+	InstallEvent->SetStringField("kochava_app_id", UHelikaLibrary::GetHelikaSettings()->KochavaAppId);
+	InstallEvent->SetStringField("kochava_device_id", GetKochavaDeviceId());
+
+	TSharedPtr<FJsonObject> DataEvent = MakeShareable(new FJsonObject());
+	DataEvent->SetStringField("origination_ip", UHelikaLibrary::GetLocalIpAddress());
+	DataEvent->SetStringField("device_ua", FString::Printf(TEXT("Mozilla/5.0 ( %s )"), *UHelikaLibrary::GetOSVersion()));
+	DataEvent->SetStringField("app_version", UHelikaLibrary::GetHelikaSettings()->AppVersion);
+
+	TSharedPtr<FJsonObject> GdprEvent = MakeShareable(new FJsonObject());
+	GdprEvent->SetNumberField("gdpr_applies", 1);
+	GdprEvent->SetStringField("tc_string", "Hello");
+	GdprEvent->SetNumberField("ad_user_data", 1);
+	GdprEvent->SetNumberField("ad_personalization", 1);
+	
+	TSharedPtr<FJsonObject> DeviceIdEvent = MakeShareable(new FJsonObject());
+	DeviceIdEvent->SetStringField("idfa", UHelikaLibrary::GetIdfa());
+	DeviceIdEvent->SetStringField("idfv", UHelikaLibrary::GetIdfv());
+	DeviceIdEvent->SetStringField("adid", UHelikaLibrary::GetAndroidAdID());
+	DeviceIdEvent->SetStringField("android_id", UHelikaLibrary::GetDeviceUniqueIdentifier());
+
+	DataEvent->SetObjectField("gdpr_privacy_consent", GdprEvent);
+	DataEvent->SetObjectField("device_ids", DeviceIdEvent);
+
+	InstallEvent->SetObjectField("data", DataEvent);
+
+	return InstallEvent;
+}
