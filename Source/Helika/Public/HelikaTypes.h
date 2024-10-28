@@ -3,7 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "HelikaTypes.generated.h"
 
+struct FHelikaJsonObject;
 /// Helika API Environment
 UENUM(BlueprintType)
 enum class EHelikaEnvironment : uint8
@@ -35,4 +37,66 @@ enum class EPlatformType : uint8
 	PT_CONSOLE UMETA(DisplayName = "Console"),
 	PT_UNKNOWN UMETA(DisplayName = "Unknown")
 };
+
+UCLASS(BlueprintType)
+class HELIKA_API UAppDetails : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(BlueprintReadWrite, Category="Helika|AppDetails")
+	FString PlatformId;
+	
+	UPROPERTY(BlueprintReadWrite, Category="Helika|AppDetails")
+	FString ClientAppVersion;
+	
+	UPROPERTY(BlueprintReadWrite, Category="Helika|AppDetails")
+	FString ServerAppVersion;
+	
+	UPROPERTY(BlueprintReadWrite, Category="Helika|AppDetails")
+	FString StoreId;
+	
+	UPROPERTY(BlueprintReadWrite, Category="Helika|AppDetails")
+	FString SourceId;
+
+	TSharedPtr<FJsonObject> ToJson() const;
+
+	UFUNCTION(BlueprintCallable, Category="Helika|AppDetails")
+	FString ToJsonString() const;
+
+	UFUNCTION(BlueprintCallable, Category="Helika|AppDetails")
+	FHelikaJsonObject ToHelikaJsonObject() const;
+};
+
+UCLASS(BlueprintType)
+class HELIKA_API UUserDetails : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(BlueprintReadWrite, Category="Helika|AppDetails")
+	FString PlatformId;
+	
+	UPROPERTY(BlueprintReadWrite, Category="Helika|AppDetails")
+	FString ClientAppVersion;
+	
+	UPROPERTY(BlueprintReadWrite, Category="Helika|AppDetails")
+	FString ServerAppVersion;
+	
+	UPROPERTY(BlueprintReadWrite, Category="Helika|AppDetails")
+	FString StoreId;
+	
+	UPROPERTY(BlueprintReadWrite, Category="Helika|AppDetails")
+	FString SourceId;
+
+	TSharedPtr<FJsonObject> ToJson() const;
+
+	UFUNCTION(BlueprintCallable, Category="Helika|AppDetails")
+	FString ToJsonString() const;
+
+	UFUNCTION(BlueprintCallable, Category="Helika|AppDetails")
+	FHelikaJsonObject ToHelikaJsonObject() const;
+};
+
+
 
