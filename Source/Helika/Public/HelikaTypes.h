@@ -38,6 +38,17 @@ enum class EPlatformType : uint8
 	PT_UNKNOWN UMETA(DisplayName = "Unknown")
 };
 
+UENUM(BlueprintType)
+enum class EDisableDataSettings : uint8
+{
+	DDS_None = 0 UMETA(DisplayName = "None"),
+	DDS_DeviceInfo = 1 UMETA(DisplayName = "Device Info"),
+	DDS_IpInfo = 2 UMETA(DisplayName = "IP Info"),
+	DDS_OsInfo = 3 UMETA(DisplayName = "OS Info"),
+	DDS_All = 4 UMETA(DisplayName = "All"),
+};
+
+
 UCLASS(BlueprintType)
 class HELIKA_API UAppDetails : public UObject
 {
@@ -59,6 +70,8 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category="Helika|AppDetails")
 	FString SourceId;
 
+	void Initialize(FString InPlatformId, FString InClientAppVersion, FString InServerAppVersion, FString InStoreId, FString InSourceId);
+
 	TSharedPtr<FJsonObject> ToJson() const;
 
 	UFUNCTION(BlueprintCallable, Category="Helika|AppDetails")
@@ -75,20 +88,16 @@ class HELIKA_API UUserDetails : public UObject
 
 public:
 	UPROPERTY(BlueprintReadWrite, Category="Helika|AppDetails")
-	FString PlatformId;
+	FString UserId;
 	
 	UPROPERTY(BlueprintReadWrite, Category="Helika|AppDetails")
-	FString ClientAppVersion;
+	FString Email;
 	
 	UPROPERTY(BlueprintReadWrite, Category="Helika|AppDetails")
-	FString ServerAppVersion;
-	
-	UPROPERTY(BlueprintReadWrite, Category="Helika|AppDetails")
-	FString StoreId;
-	
-	UPROPERTY(BlueprintReadWrite, Category="Helika|AppDetails")
-	FString SourceId;
+	FString WalletId;
 
+	void Initialize(FString InUserId, FString InEmail, FString InWalletId);
+	
 	TSharedPtr<FJsonObject> ToJson() const;
 
 	UFUNCTION(BlueprintCallable, Category="Helika|AppDetails")

@@ -567,6 +567,44 @@ void UHelikaManager::InitializeTracking()
 	
 }
 
+TSharedPtr<FJsonObject> UHelikaManager::AppendHelikaData() const
+{
+	TSharedPtr<FJsonObject> HelikaData = MakeShareable(new FJsonObject());
+
+	HelikaData->SetStringField("anon_id", AnonId);
+	HelikaData->SetStringField("taxonomy_ver", "v2");
+	HelikaData->SetStringField("sdk_name", UHelikaLibrary::GetHelikaSettings()->SDKName);
+	HelikaData->SetStringField("sdk_version", UHelikaLibrary::GetHelikaSettings()->SDKVersion);
+	HelikaData->SetStringField("sdk_platform", UHelikaLibrary::GetPlatformName());
+	HelikaData->SetStringField("event_source", UHelikaLibrary::GetPlatformName());
+	HelikaData->SetBoolField("pii_tracking", PiiTracking);
+
+	return HelikaData;
+}
+
+TSharedPtr<FJsonObject> UHelikaManager::AppendPiiData(TSharedPtr<FJsonObject> HelikaData)
+{
+	TSharedPtr<FJsonObject> PiiData = MakeShareable(new FJsonObject());
+
+	FVector2D GameResolution = UHelikaLibrary::GetGameResolution();
+	
+	PiiData->SetStringField("resolution", FString::Printf(TEXT("%fx%f"), GameResolution.X, GameResolution.Y));
+
+	//TODO: Pending.
+	PiiData->SetStringField("touch_support", FPlatformMisc::SupportsTouchInput() ? TEXT("True") : TEXT("False"));
+
+	PiiData->SetStringField("device_type", UHelikaLibrary::GetDeviceType());
+	PiiData->SetStringField("os", UHelikaLibrary::GetOSVersion());
+
+	//TODO: Pending.
+	//PiiData->SetStringField("downlink", UHelikaLibrary::GetPlatformName());
+	//PiiData->SetStringField("effective_type", UHelikaLibrary::GetPlatformName());
+	//PiiData->SetStringField("connection_type", UHelikaLibrary::GetPlatformName());
+
+	HelikaData->SetObjectField("additional_user_info", PiiData);
+	return HelikaData;
+}
+
 TSharedPtr<FJsonObject> UHelikaManager::CreateInstallEvent()
 {
 	TSharedPtr<FJsonObject> InstallEvent = MakeShareable(new FJsonObject());
@@ -598,3 +636,150 @@ TSharedPtr<FJsonObject> UHelikaManager::CreateInstallEvent()
 
 	return InstallEvent;
 }
+
+UUserDetails* UHelikaManager::GetUserDetails() const
+{
+	checkf(UserDetails, TEXT("User details cannot be null"));
+	return UserDetails;
+}
+
+void UHelikaManager::SetUserDetails(const FString& InUserId, const FString& InEmail, const FString& InWalletId, bool CreateNewAnon)
+{
+	UUserDetails* TempUserDetails = NewObject<UUserDetails>();
+	if(InUserId.IsEmpty())
+	{
+		TempUserDetails->Initialize(GenerateAnonId(CreateNewAnon), "", "");
+	}
+	else
+	{
+		TempUserDetails->Initialize(InUserId, "", "");		
+	}
+
+	if(InEmail.IsEmpty() || !UHelikaLibrary::IsValidEmail(InEmail))
+	{
+		UE_LOG(LogHelika, Error, TEXT("Email is not a valid Email Address"));
+		return;
+	}
+	TempUserDetails->Email = InEmail;
+
+	if(InWalletId.IsEmpty() || !UHelikaLibrary::ValidateString(UHelikaLibrary::Wallet_Regex, InWalletId))
+	{
+		UE_LOG(LogHelika, Error, TEXT("Wallet address is not a valid address"));
+		return;
+	}
+	TempUserDetails->WalletId = InWalletId;
+
+	UserDetails = TempUserDetails;
+}
+
+void UHelikaManager::SetAppDetails(UAppDetails* InAppDetails)
+{
+	checkf(InAppDetails, TEXT("Cannot set app details to null"));
+	AppDetails = InAppDetails;
+}
+
+void UHelikaManager::SetAppDetails(const FString& InPlatformId, const FString& InCAV, const FString& InSAV, const FString& InStoreId,
+                                   const FString& InSourceId)
+{
+	if(AppDetails == nullptr)
+	{
+		AppDetails = NewObject<UAppDetails>();
+		AppDetails->Initialize(InPlatformId, InCAV, InSAV, InStoreId, InSourceId);
+	}
+	else
+	{
+		AppDetails->Initialize(InPlatformId, InCAV, InSAV, InStoreId, InSourceId);
+	}
+}
+
+bool UHelikaManager::GetPiiTracking() const
+{
+	return PiiTracking;
+}
+
+void UHelikaManager::SetPiiTracking(bool InPiiTracking)
+{
+	PiiTracking = InPiiTracking;
+
+	if(PiiTracking)
+	{
+		TSharedPtr<FJsonObject> PiiEvent = GetTemplateEvent("session_created", "session_data_updated");
+		if(PiiEvent.IsValid())
+		{
+			TSharedPtr<FJsonObject> Event = PiiEvent->GetObjectField(TEXT("event"));
+
+			Event->SetStringField("type", "Session Data Referesh");
+			Event->SetStringField("sdk_class", UHelikaLibrary::GetHelikaSettings()->SDKClass);
+
+			Event->SetObjectField("helika_data", AppendPiiData(AppendHelikaData()));
+			
+			Event->SetObjectField("app_details", AppDetails->ToJson());
+
+			TSharedPtr<FJsonObject> EventParams = MakeShareable(new FJsonObject());
+			EventParams->SetStringField("id", FGuid::NewGuid().ToString());
+			TArray<TSharedPtr<FJsonValue>> EventArrayJsonObject;
+			const TSharedPtr<FJsonValueObject> JsonValueObject = MakeShareable(new FJsonValueObject(PiiEvent));
+			EventArrayJsonObject.Add(JsonValueObject);			
+			EventParams->SetArrayField("events", EventArrayJsonObject);
+
+			FString JsonString;
+			const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JsonString);
+			if(!FJsonSerializer::Serialize(EventParams.ToSharedRef(), Writer))
+			{
+				UE_LOG(LogHelika, Error, TEXT("Failed to serialize event data to JSON"));
+				return;
+			}
+
+			// send event to helika API
+			SendHTTPPost("/game/game-event", JsonString);
+		}
+	}
+}
+
+bool UHelikaManager::IsEnabled() const
+{
+	return Enabled;
+}
+
+void UHelikaManager::SetEnabled(const bool InEnabled)
+{
+	Enabled = InEnabled;
+}
+
+TSharedPtr<FJsonObject> UHelikaManager::GetTemplateEvent(FString EventType, FString EventSubType)
+{
+	TSharedPtr<FJsonObject> TemplateEvent = MakeShareable(new FJsonObject());
+	TemplateEvent->SetStringField("created_at", FDateTime::UtcNow().ToIso8601());
+	TemplateEvent->SetStringField("game_id", UHelikaLibrary::GetHelikaSettings()->GameId);
+	TemplateEvent->SetStringField("event_type", EventType);
+
+	TSharedPtr<FJsonObject> TemplateSubEvent = MakeShareable(new FJsonObject());
+	TemplateSubEvent->SetStringField("user_id", this->UserDetails->UserId);
+	TemplateSubEvent->SetStringField("session_id", GetSessionId());
+	if(!EventSubType.IsEmpty())
+	{
+		TemplateSubEvent->SetStringField("event_sub_type", EventSubType);
+	}
+	else
+	{
+		TemplateSubEvent->SetObjectField("event_sub_type", nullptr);
+	}
+
+	TemplateEvent->SetObjectField("event", TemplateSubEvent);
+
+	return TemplateEvent;
+}
+
+FHelikaJsonObject UHelikaManager::GetTemplateEventAsHelikaJson(FString EventType, FString EventSubType)
+{
+	FHelikaJsonObject HelikaJsonObject;
+	HelikaJsonObject.Object = GetTemplateEvent(EventType, EventSubType);
+	return HelikaJsonObject;
+}
+
+FString UHelikaManager::GenerateAnonId(bool bBypassStored)
+{
+	return FString();
+}
+
+

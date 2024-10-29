@@ -18,7 +18,9 @@ class HELIKA_API UHelikaManager : public UObject
 
 private:
 
-	UHelikaManager(){};
+	UHelikaManager(): PiiTracking(false), Enabled(false), AppDetails(), UserDetails()
+	{
+	};
 
 	static UHelikaManager* Instance;
 
@@ -56,10 +58,12 @@ public:
 	bool SendCustomEvents(TArray<TSharedPtr<FJsonObject>> EventProps) const;
 
 	// Sets the player ID
+	UE_DEPRECATED(0.1.1, "SetPlayerId() is deprecated. Please use SetUserDetails() instead")
 	UFUNCTION(BlueprintCallable, Category="Helika")
 	void SetPlayerId(const FString& InPlayerId);
 	
 	// Get the player ID
+	UE_DEPRECATED(0.1.1, "GetPlayerId() is deprecated. Please use GetUserDetails() instead")
 	UFUNCTION(BlueprintPure, Category="Helika")
 	FString GetPlayerId();
 
@@ -78,12 +82,44 @@ public:
 
 	TSharedPtr<FJsonObject> CreateInstallEvent();
 
+
+	UUserDetails* GetUserDetails() const;
+	void SetUserDetails(const FString& InUserId, const FString& InEmail, const FString& InWalletId, bool CreateNewAnon = false);
+
+	void SetAppDetails(UAppDetails* InAppDetails);
+	void SetAppDetails(const FString& InPlatformId, const FString& InCAV, const FString& InSAV, const FString& InStoreId, const FString& InSourceId);
+
+	bool GetPiiTracking() const;
+	void SetPiiTracking(bool InPiiTracking);
+
+	bool IsEnabled() const;
+	void SetEnabled(bool InEnabled);
+
+	TSharedPtr<FJsonObject> GetTemplateEvent(FString EventType, FString EventSubType = "");
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Helika|Events")
+	FHelikaJsonObject GetTemplateEventAsHelikaJson(FString EventType, FString EventSubType = "");
+
+	FString GenerateAnonId(bool bBypassStored = false);
+	
+
 protected:
 	FString BaseUrl;
 	FString SessionId;
 	ETelemetryLevel Telemetry = ETelemetryLevel::TL_None;
 	bool bIsInitialized = false;
 	FString KochavaDeviceID;
+
+	FDateTime SessionExpiry;
+	bool PiiTracking;
+	bool Enabled;
+	UPROPERTY()
+	UAppDetails* AppDetails;
+	UPROPERTY(EditAnywhere)
+	UUserDetails* UserDetails;
+	FString AnonId;
+	
+	
 
 private:
 	TSharedPtr<FJsonObject> AppendAttributesToJsonObject(TSharedPtr<FJsonObject> JsonObject) const;
@@ -96,4 +132,7 @@ private:
 
 	UFUNCTION(BlueprintCallable, Category = "Helika")
 	void InitializeTracking();
+
+	TSharedPtr<FJsonObject> AppendHelikaData() const;
+	TSharedPtr<FJsonObject> AppendPiiData(TSharedPtr<FJsonObject> HelikaData);
 };

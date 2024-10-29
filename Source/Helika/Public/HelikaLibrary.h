@@ -56,6 +56,10 @@ public:
 
 	static TSharedPtr<FJsonObject> GetDeviceIDs();
 
+	// Validators
+	static bool IsValidEmail(const FString& Email);
+	static bool ValidateString(const FRegexPattern& ComparePattern, const FString& InString);
+
 public:
 
 	static void AddIfNull(const TSharedPtr<FJsonObject>& HelikaEvent, const FString& Key, const FString& NewValue);
@@ -64,4 +68,11 @@ public:
 	static FString GetIdfv();
 	static FString GetIdfa();
 	static FString GetAndroidAdID();
+
+public:
+	static FRegexPattern Wallet_Regex;
+
+public:
+	static FVector2D GetGameViewportSize();
+	static FVector2D GetGameResolution();
 };

@@ -20,6 +20,7 @@
 #include "Android/AndroidPlatformMisc.h"
 #endif
 
+FRegexPattern UHelikaLibrary::Wallet_Regex(TEXT("/^0x[a-fA-F0-9]{40}$/g"));
 
 UHelikaSettings* UHelikaLibrary::GetHelikaSettings()
 {
@@ -188,6 +189,22 @@ TSharedPtr<FJsonObject> UHelikaLibrary::GetDeviceIDs()
     return DeviceIds;
 }
 
+bool UHelikaLibrary::IsValidEmail(const FString& Email)
+{
+    const FString EmailPattern = TEXT(R"(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$)");
+
+    const FRegexPattern Pattern(EmailPattern);
+    FRegexMatcher Matcher(Pattern, Email);
+
+    return Matcher.FindNext();
+}
+
+bool UHelikaLibrary::ValidateString(const FRegexPattern& ComparePattern, const FString& InString)
+{
+    FRegexMatcher Matcher(ComparePattern, InString);
+    return Matcher.FindNext();
+}
+
 void UHelikaLibrary::AddIfNull(const TSharedPtr<FJsonObject>& HelikaEvent, const FString& Key, const FString& NewValue)
 {
     if(!HelikaEvent->HasField(Key))
@@ -263,6 +280,24 @@ FString UHelikaLibrary::GetAndroidAdID()
     return FAndroidMisc::GetUniqueAdvertisingId();
 #endif
     return "Unknown";
+}
+
+FVector2D UHelikaLibrary::GetGameViewportSize()
+{
+    FVector2D Result = FVector2D(1,1);
+    if(GEngine && GEngine->GameViewport)
+    {
+        GEngine->GameViewport->GetViewportSize(Result);
+    }
+    return Result;
+}
+
+FVector2D UHelikaLibrary::GetGameResolution()
+{
+    FVector2D Result = FVector2D(1,1);
+    Result.X = GSystemResolution.ResX;
+    Result.Y = GSystemResolution.ResY;
+    return Result;
 }
 
 
