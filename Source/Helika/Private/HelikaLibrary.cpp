@@ -20,7 +20,7 @@
 #include "Android/AndroidPlatformMisc.h"
 #endif
 
-FRegexPattern UHelikaLibrary::Wallet_Regex(TEXT("/^0x[a-fA-F0-9]{40}$/g"));
+FRegexPattern UHelikaLibrary::Wallet_Regex(TEXT("^0x[a-fA-F0-9]{40}$"));
 
 UHelikaSettings* UHelikaLibrary::GetHelikaSettings()
 {
@@ -191,7 +191,7 @@ TSharedPtr<FJsonObject> UHelikaLibrary::GetDeviceIDs()
 
 bool UHelikaLibrary::IsValidEmail(const FString& Email)
 {
-    const FString EmailPattern = TEXT(R"(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$)");
+    const FString EmailPattern = TEXT("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
     const FRegexPattern Pattern(EmailPattern);
     FRegexMatcher Matcher(Pattern, Email);

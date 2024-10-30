@@ -68,6 +68,15 @@ void UHelikaManager::InitializeSDK()
 	{
 		// install event setup -> kochava
 	}
+
+	SessionExpiry = FDateTime::Now();
+	PiiTracking = false;
+	Enabled = true;
+	AppDetails = NewObject<UAppDetails>();
+	AppDetails->Initialize(FString(), FString(), FString(), FString(), FString());
+	AnonId = FString("NewAnonId");
+	UserDetails = NewObject<UUserDetails>();
+	UserDetails->Initialize(FString(), FString(), FString());
 	
 	CreateSession();
 	
@@ -639,7 +648,7 @@ TSharedPtr<FJsonObject> UHelikaManager::CreateInstallEvent()
 
 UUserDetails* UHelikaManager::GetUserDetails() const
 {
-	checkf(UserDetails, TEXT("User details cannot be null"));
+	checkf(UserDetails, TEXT("User details are null"));
 	return UserDetails;
 }
 
@@ -672,10 +681,10 @@ void UHelikaManager::SetUserDetails(const FString& InUserId, const FString& InEm
 	UserDetails = TempUserDetails;
 }
 
-void UHelikaManager::SetAppDetails(UAppDetails* InAppDetails)
+UAppDetails* UHelikaManager::GetAppDetails() const
 {
-	checkf(InAppDetails, TEXT("Cannot set app details to null"));
-	AppDetails = InAppDetails;
+	checkf(AppDetails, TEXT("App details are null"));
+	return AppDetails;
 }
 
 void UHelikaManager::SetAppDetails(const FString& InPlatformId, const FString& InCAV, const FString& InSAV, const FString& InStoreId,

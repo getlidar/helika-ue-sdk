@@ -86,7 +86,7 @@ public:
 	UUserDetails* GetUserDetails() const;
 	void SetUserDetails(const FString& InUserId, const FString& InEmail, const FString& InWalletId, bool CreateNewAnon = false);
 
-	void SetAppDetails(UAppDetails* InAppDetails);
+	UAppDetails* GetAppDetails() const;
 	void SetAppDetails(const FString& InPlatformId, const FString& InCAV, const FString& InSAV, const FString& InStoreId, const FString& InSourceId);
 
 	bool GetPiiTracking() const;
