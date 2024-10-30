@@ -239,14 +239,49 @@ bool FHelikaSendCustomEventTest::RunTest(const FString& Parameters)
 		
 		TestTrue("Invalid parameter call", HelikaManager->SendCustomEvents(EventArray));	
 	}
-	
-	
-	
 
-	
 	LogHelika.SetVerbosity(OriginalVerbosity);	
 	return true;
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHelikaGetterSetterTest, "Helika.HelikaGetterSetterTest", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FHelikaGetterSetterTest::RunTest(const FString& Parameters)
+{
+	UHelikaManager* HelikaManager = NewObject<UHelikaManager>();
+	UHelikaLibrary::GetHelikaSettings()->HelikaAPIKey = "TestAPIKey";
+	UHelikaLibrary::GetHelikaSettings()->GameId = "ValidGameId";
+	
+	HelikaManager->InitializeSDK();
+
+	// User details
+
+	HelikaManager->SetUserDetails("USER001", "mayank.rajput@chicmic.in", "0x1234567890abcdef1234567890abcdef12345678");
+
+	UE_LOG(LogHelika, Log, TEXT("User Details : %s"), *HelikaManager->GetUserDetails()->ToJsonString());
+
+	// App details
+	
+	HelikaManager->SetAppDetails("PLATFORM001", "0.0.1", "0.0.1", "STORE001", "SOURCE001");
+
+	UE_LOG(LogHelika, Log, TEXT("App Details : %s"), *HelikaManager->GetAppDetails()->ToJsonString());
+
+	// Pii Tracking  Note: this method already contains AppendHelikaData and AppendPiiData
+
+	HelikaManager->SetPiiTracking(true);
+
+	// Template Event
+
+	TSharedPtr<FJsonObject> TemplateEvent = HelikaManager->GetTemplateEvent("session_created", "session_data_updated");
+	FString JsonString;
+	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JsonString);
+	FJsonSerializer::Serialize(TemplateEvent.ToSharedRef(), Writer);
+	UE_LOG(LogHelika, Log, TEXT("Template Event : %s"), *JsonString);
+	
+	
+	return true;
+}
+
 
 
 #endif

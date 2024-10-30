@@ -48,6 +48,13 @@ enum class EDisableDataSettings : uint8
 	DDS_All = 4 UMETA(DisplayName = "All"),
 };
 
+UENUM(BlueprintType)
+enum class EEventType : uint8
+{
+	ET_User = 0 UMETA(DisplayName = "User Details"),
+	ET_App = 1 UMETA(DisplayName = "App Details")
+};
+
 
 UCLASS(BlueprintType)
 class HELIKA_API UAppDetails : public UObject

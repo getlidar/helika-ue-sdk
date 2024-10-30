@@ -791,4 +791,79 @@ FString UHelikaManager::GenerateAnonId(bool bBypassStored)
 	return FString();
 }
 
+TSharedPtr<FJsonObject> UHelikaManager::PopulatedDefaultValues(EEventType Type, TSharedPtr<FJsonObject> Values)
+{
+	switch(Type)
+	{
+		case EEventType::ET_User :
+			{
+				if (!Values->HasField(TEXT("email")))
+				{
+					Values->SetStringField("email", Values->GetStringField(TEXT("email")));
+				}
+				else
+				{
+					Values->SetObjectField("email", nullptr);
+				}
+				if (!Values->HasField(TEXT("wallet_id")))
+				{
+					Values->SetStringField("wallet_id", Values->GetStringField(TEXT("wallet_id")));
+				}
+				else
+				{
+					Values->SetObjectField("wallet_id", nullptr);
+				}
+				return Values;
+			}
+		case EEventType::ET_App :
+			{
+				if (!Values->HasField(TEXT("platform_id")))
+				{
+					Values->SetStringField("platform_id", Values->GetStringField(TEXT("platform_id")));
+				}
+				else
+				{
+					Values->SetObjectField("platform_id", nullptr);
+				}
+				if (!Values->HasField(TEXT("client_app_version")))
+				{
+					Values->SetStringField("client_app_version", Values->GetStringField(TEXT("client_app_version")));
+				}
+				else
+				{
+					Values->SetObjectField("client_app_version", nullptr);
+				}
+				if (!Values->HasField(TEXT("server_app_version")))
+				{
+					Values->SetStringField("server_app_version", Values->GetStringField(TEXT("server_app_version")));
+				}
+				else
+				{
+					Values->SetObjectField("server_app_version", nullptr);
+				}
+				if (!Values->HasField(TEXT("store_id")))
+				{
+					Values->SetStringField("store_id", Values->GetStringField(TEXT("store_id")));
+				}
+				else
+				{
+					Values->SetObjectField("store_id", nullptr);
+				}
+				if (!Values->HasField(TEXT("source_id")))
+				{
+					Values->SetStringField("source_id", Values->GetStringField(TEXT("source_id")));
+				}
+				else
+				{
+					Values->SetObjectField("source_id", nullptr);
+				}
+				return Values;
+			}
+		default :
+			{
+				return Values;
+			}
+	}
+}
+
 

@@ -101,6 +101,8 @@ public:
 	FHelikaJsonObject GetTemplateEventAsHelikaJson(FString EventType, FString EventSubType = "");
 
 	FString GenerateAnonId(bool bBypassStored = false);
+
+	TSharedPtr<FJsonObject> PopulatedDefaultValues(EEventType Type, TSharedPtr<FJsonObject> Values);
 	
 
 protected:
