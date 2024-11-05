@@ -34,6 +34,8 @@
 
 #endif
 
+#include <openssl/sha.h>
+
 UHelikaManager* UHelikaManager::Instance = nullptr;
 
 void UHelikaManager::InitializeSDK()
@@ -74,14 +76,14 @@ void UHelikaManager::InitializeSDK()
 	Enabled = true;
 	AppDetails = NewObject<UAppDetails>();
 	AppDetails->Initialize(FString(), FString(), FString(), FString(), FString());
-	AnonId = FString("NewAnonId");
+	AnonId = GenerateAnonId();
 	UserDetails = NewObject<UUserDetails>();
 	UserDetails->Initialize(FString(), FString(), FString());
 	
 	CreateSession();
 	
 #if WITH_EDITOR
-	FEditorDelegates::EndPIE.AddStatic(&EndSession);
+	FEditorDelegates::EndPIE.AddStatic(&EndEditorSession);
 #endif
 }
 
@@ -509,11 +511,11 @@ void UHelikaManager::SendHTTPPost(const FString& Url, const FString& Data) const
 				if (bConnectedSuccessfully)
 				{
 
-					ProcessEventTrackResponse(Response->GetContentAsString());
+					ProcessEventSentSuccess(Response->GetContentAsString());
 				}
 				else
 				{
-					UE_LOG(LogHelika, Error, TEXT("Request failed..! due to %s"), LexToString(Request->GetFailureReason()));
+					ProcessEventSentError(FString::Printf(TEXT("Request failed..! due to %s, Failure message %s"), LexToString(Request->GetFailureReason()), *Response->GetContentAsString()));
 				}
 			});
 
@@ -521,12 +523,17 @@ void UHelikaManager::SendHTTPPost(const FString& Url, const FString& Data) const
 	}
 }
 
-void UHelikaManager::ProcessEventTrackResponse(const FString& Data)
+void UHelikaManager::ProcessEventSentSuccess(const FString& Data)
 {
-	UE_LOG(LogHelika, Display, TEXT("Helika Server Responce : %s"), *Data);
+	UE_LOG(LogHelika, Log, TEXT("Event Processed Successfully : %s"), *Data);
 }
 
-void UHelikaManager::EndSession(bool bIsSimulating)
+void UHelikaManager::ProcessEventSentError(const FString& Data)
+{
+	UE_LOG(LogHelika, Display, TEXT("Helika Server Response : %s"), *Data);
+}
+
+void UHelikaManager::EndEditorSession(bool bIsSimulating)
 {
 	Get()->DeinitializeSDK();
 }
@@ -612,6 +619,53 @@ TSharedPtr<FJsonObject> UHelikaManager::AppendPiiData(TSharedPtr<FJsonObject> He
 
 	HelikaData->SetObjectField("additional_user_info", PiiData);
 	return HelikaData;
+}
+
+FDateTime UHelikaManager::AddHours(const FDateTime Date, const int Hours)
+{
+	FDateTime NewDateTime = Date + FTimespan(Hours, 0, 0);
+	return NewDateTime;
+}
+
+FDateTime UHelikaManager::AddMinutes(const FDateTime Date, const int Minutes)
+{
+	FDateTime NewDateTime = Date + FTimespan(0, Minutes, 0);
+	return NewDateTime;
+}
+
+void UHelikaManager::ExtendSession()
+{
+	SessionExpiry = FDateTime::Now() + FTimespan(0, 15, 0);
+}
+
+void UHelikaManager::EndSession() const
+{
+	TSharedPtr<FJsonObject> EndEvent = GetTemplateEvent("session_end", "session_end");
+	EndEvent->SetStringField("event_type", "");
+	
+	TSharedPtr<FJsonObject> Event = EndEvent->GetObjectField(TEXT("event"));
+	Event->SetStringField("event_sub_type", "session_end");
+	Event->SetStringField("sdk_class", UHelikaLibrary::GetHelikaSettings()->SDKClass);
+	Event->SetObjectField("helika_data", AppendHelikaData());
+	Event->SetObjectField("app_details", AppDetails->ToJson());
+
+	TSharedPtr<FJsonObject> EventParams = MakeShareable(new FJsonObject());
+	EventParams->SetStringField("id", FGuid::NewGuid().ToString());
+	TArray<TSharedPtr<FJsonValue>> EventArrayJsonObject;
+	const TSharedPtr<FJsonValueObject> JsonValueObject = MakeShareable(new FJsonValueObject(EndEvent));
+	EventArrayJsonObject.Add(JsonValueObject);			
+	EventParams->SetArrayField("events", EventArrayJsonObject);
+
+	FString JsonString;
+	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JsonString);
+	if(!FJsonSerializer::Serialize(EventParams.ToSharedRef(), Writer))
+	{
+		UE_LOG(LogHelika, Error, TEXT("Failed to serialize event data to JSON"));
+		return;
+	}
+
+	// send event to helika API
+	SendHTTPPost("/game/game-event", JsonString);
 }
 
 TSharedPtr<FJsonObject> UHelikaManager::CreateInstallEvent()
@@ -717,7 +771,7 @@ void UHelikaManager::SetPiiTracking(bool InPiiTracking)
 		{
 			TSharedPtr<FJsonObject> Event = PiiEvent->GetObjectField(TEXT("event"));
 
-			Event->SetStringField("type", "Session Data Referesh");
+			Event->SetStringField("type", "Session Data Refresh");
 			Event->SetStringField("sdk_class", UHelikaLibrary::GetHelikaSettings()->SDKClass);
 
 			Event->SetObjectField("helika_data", AppendPiiData(AppendHelikaData()));
@@ -755,7 +809,7 @@ void UHelikaManager::SetEnabled(const bool InEnabled)
 	Enabled = InEnabled;
 }
 
-TSharedPtr<FJsonObject> UHelikaManager::GetTemplateEvent(FString EventType, FString EventSubType)
+TSharedPtr<FJsonObject> UHelikaManager::GetTemplateEvent(FString EventType, FString EventSubType) const
 {
 	TSharedPtr<FJsonObject> TemplateEvent = MakeShareable(new FJsonObject());
 	TemplateEvent->SetStringField("created_at", FDateTime::UtcNow().ToIso8601());
@@ -788,82 +842,27 @@ FHelikaJsonObject UHelikaManager::GetTemplateEventAsHelikaJson(FString EventType
 
 FString UHelikaManager::GenerateAnonId(bool bBypassStored)
 {
-	return FString();
-}
+	FSHA256Signature Hash;
 
-TSharedPtr<FJsonObject> UHelikaManager::PopulatedDefaultValues(EEventType Type, TSharedPtr<FJsonObject> Values)
-{
-	switch(Type)
+	FString DataS = FGuid::NewGuid().ToString();
+
+	FTCHARToUTF8 Convertor(*DataS);
+	const uint8* Data = reinterpret_cast<const uint8*>(Convertor.Get());
+	int32 DataSize = Convertor.Length();
+	
+	SHA256_CTX SHA256_Context;
+	SHA256_Init(&SHA256_Context);
+	SHA256_Update(&SHA256_Context, Data, DataSize);
+	SHA256_Final(Hash.Signature, &SHA256_Context);
+
+	if(!bBypassStored)
 	{
-		case EEventType::ET_User :
-			{
-				if (!Values->HasField(TEXT("email")))
-				{
-					Values->SetStringField("email", Values->GetStringField(TEXT("email")));
-				}
-				else
-				{
-					Values->SetObjectField("email", nullptr);
-				}
-				if (!Values->HasField(TEXT("wallet_id")))
-				{
-					Values->SetStringField("wallet_id", Values->GetStringField(TEXT("wallet_id")));
-				}
-				else
-				{
-					Values->SetObjectField("wallet_id", nullptr);
-				}
-				return Values;
-			}
-		case EEventType::ET_App :
-			{
-				if (!Values->HasField(TEXT("platform_id")))
-				{
-					Values->SetStringField("platform_id", Values->GetStringField(TEXT("platform_id")));
-				}
-				else
-				{
-					Values->SetObjectField("platform_id", nullptr);
-				}
-				if (!Values->HasField(TEXT("client_app_version")))
-				{
-					Values->SetStringField("client_app_version", Values->GetStringField(TEXT("client_app_version")));
-				}
-				else
-				{
-					Values->SetObjectField("client_app_version", nullptr);
-				}
-				if (!Values->HasField(TEXT("server_app_version")))
-				{
-					Values->SetStringField("server_app_version", Values->GetStringField(TEXT("server_app_version")));
-				}
-				else
-				{
-					Values->SetObjectField("server_app_version", nullptr);
-				}
-				if (!Values->HasField(TEXT("store_id")))
-				{
-					Values->SetStringField("store_id", Values->GetStringField(TEXT("store_id")));
-				}
-				else
-				{
-					Values->SetObjectField("store_id", nullptr);
-				}
-				if (!Values->HasField(TEXT("source_id")))
-				{
-					Values->SetStringField("source_id", Values->GetStringField(TEXT("source_id")));
-				}
-				else
-				{
-					Values->SetObjectField("source_id", nullptr);
-				}
-				return Values;
-			}
-		default :
-			{
-				return Values;
-			}
+		if(AnonId.IsEmpty())
+		{
+			AnonId = "anon_" + Hash.ToString();
+		}
+		return AnonId;
 	}
+	
+	return FString("anon_" + Hash.ToString());
 }
-
-

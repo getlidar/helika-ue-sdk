@@ -95,16 +95,16 @@ public:
 	bool IsEnabled() const;
 	void SetEnabled(bool InEnabled);
 
-	TSharedPtr<FJsonObject> GetTemplateEvent(FString EventType, FString EventSubType = "");
+	TSharedPtr<FJsonObject> GetTemplateEvent(FString EventType, FString EventSubType = "") const;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Helika|Events")
 	FHelikaJsonObject GetTemplateEventAsHelikaJson(FString EventType, FString EventSubType = "");
 
 	FString GenerateAnonId(bool bBypassStored = false);
 
-	TSharedPtr<FJsonObject> PopulatedDefaultValues(EEventType Type, TSharedPtr<FJsonObject> Values);
-	
-
+	FDateTime AddHours(FDateTime Date, int Hours);
+	FDateTime AddMinutes(FDateTime Date, int Minutes);
+	void ExtendSession();
 protected:
 	FString BaseUrl;
 	FString SessionId;
@@ -128,8 +128,9 @@ private:
 	TSharedPtr<FJsonObject> AppendAttributesToJsonObject(const FString& EventName, const TSharedPtr<FJsonObject>& JsonObject) const;
 	void CreateSession() const;
 	void SendHTTPPost(const FString& Url, const FString& Data) const;
-	static void ProcessEventTrackResponse(const FString& Data);
-	static void EndSession(bool bIsSimulating);
+	static void ProcessEventSentSuccess(const FString& Data);
+	static void ProcessEventSentError(const FString& Data);
+	static void EndEditorSession(bool bIsSimulating);
 	FString GenerateKochavaDeviceID();
 
 	UFUNCTION(BlueprintCallable, Category = "Helika")
@@ -137,4 +138,6 @@ private:
 
 	TSharedPtr<FJsonObject> AppendHelikaData() const;
 	TSharedPtr<FJsonObject> AppendPiiData(TSharedPtr<FJsonObject> HelikaData);
+	
+	void EndSession() const;
 };
