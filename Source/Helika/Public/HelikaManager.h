@@ -18,7 +18,7 @@ class HELIKA_API UHelikaManager : public UObject
 
 private:
 
-	UHelikaManager(): PiiTracking(false), Enabled(false), AppDetails(), UserDetails()
+	UHelikaManager(): bPiiTracking(false), bEnabled(false), AppDetails(), UserDetails()
 	{
 	};
 
@@ -117,8 +117,8 @@ protected:
 	FString KochavaDeviceID;
 
 	FDateTime SessionExpiry;
-	bool PiiTracking;
-	bool Enabled;
+	bool bPiiTracking;
+	bool bEnabled;
 	UPROPERTY()
 	UAppDetails* AppDetails;
 	UPROPERTY(EditAnywhere)

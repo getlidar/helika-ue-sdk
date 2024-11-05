@@ -72,8 +72,8 @@ void UHelikaManager::InitializeSDK()
 	}
 
 	SessionExpiry = FDateTime::Now();
-	PiiTracking = false;
-	Enabled = true;
+	bPiiTracking = false;
+	bEnabled = true;
 	AppDetails = NewObject<UAppDetails>();
 	AppDetails->Initialize(FString(), FString(), FString(), FString(), FString());
 	AnonId = GenerateAnonId();
@@ -593,7 +593,7 @@ TSharedPtr<FJsonObject> UHelikaManager::AppendHelikaData() const
 	HelikaData->SetStringField("sdk_version", UHelikaLibrary::GetHelikaSettings()->SDKVersion);
 	HelikaData->SetStringField("sdk_platform", UHelikaLibrary::GetPlatformName());
 	HelikaData->SetStringField("event_source", UHelikaLibrary::GetPlatformName());
-	HelikaData->SetBoolField("pii_tracking", PiiTracking);
+	HelikaData->SetBoolField("pii_tracking", bPiiTracking);
 
 	return HelikaData;
 }
@@ -829,14 +829,14 @@ void UHelikaManager::SetAppDetails(const FString& InPlatformId, const FString& I
 
 bool UHelikaManager::GetPiiTracking() const
 {
-	return PiiTracking;
+	return bPiiTracking;
 }
 
-void UHelikaManager::SetPiiTracking(bool InPiiTracking)
+void UHelikaManager::SetPiiTracking(bool bInPiiTracking)
 {
-	PiiTracking = InPiiTracking;
+	bPiiTracking = bInPiiTracking;
 
-	if(PiiTracking)
+	if(bPiiTracking)
 	{
 		TSharedPtr<FJsonObject> PiiEvent = GetTemplateEvent("session_created", "session_data_updated");
 		if(PiiEvent.IsValid())
@@ -873,12 +873,12 @@ void UHelikaManager::SetPiiTracking(bool InPiiTracking)
 
 bool UHelikaManager::IsEnabled() const
 {
-	return Enabled;
+	return bEnabled;
 }
 
-void UHelikaManager::SetEnabled(const bool InEnabled)
+void UHelikaManager::SetEnabled(const bool bInEnabled)
 {
-	Enabled = InEnabled;
+	bEnabled = bInEnabled;
 }
 
 TSharedPtr<FJsonObject> UHelikaManager::GetTemplateEvent(FString EventType, FString EventSubType) const
