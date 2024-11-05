@@ -102,6 +102,10 @@ public:
 
 	FString GenerateAnonId(bool bBypassStored = false);
 
+	TSharedPtr<FJsonObject> PopulateDefaultValues(EEventType Type, TSharedPtr<FJsonObject> Values);
+
+	void AddUrlParam(FString Key, FString Value);
+	
 	FDateTime AddHours(FDateTime Date, int Hours);
 	FDateTime AddMinutes(FDateTime Date, int Minutes);
 	void ExtendSession();
@@ -120,6 +124,8 @@ protected:
 	UPROPERTY(EditAnywhere)
 	UUserDetails* UserDetails;
 	FString AnonId;
+	TMap<FString, FString> UrlParams;
+	FString HelikaReferralLink;
 	
 	
 
@@ -138,6 +144,14 @@ private:
 
 	TSharedPtr<FJsonObject> AppendHelikaData() const;
 	TSharedPtr<FJsonObject> AppendPiiData(TSharedPtr<FJsonObject> HelikaData);
+	TSharedPtr<FJsonObject> AppendReferralData(TSharedPtr<FJsonObject> HelikaData);
+	
+	FString GetUrlParam(FString Key);
+	TArray<TSharedPtr<FJsonValue>> GetAllUrlParams();
 	
 	void EndSession() const;
+
+	FString RefreshLinkId();
+
+	TArray<TSharedPtr<FJsonValue>> RefreshUtms();
 };

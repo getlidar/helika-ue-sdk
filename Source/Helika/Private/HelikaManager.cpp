@@ -621,6 +621,64 @@ TSharedPtr<FJsonObject> UHelikaManager::AppendPiiData(TSharedPtr<FJsonObject> He
 	return HelikaData;
 }
 
+TSharedPtr<FJsonObject> UHelikaManager::AppendReferralData(TSharedPtr<FJsonObject> HelikaData)
+{
+	TArray<TSharedPtr<FJsonValue>> Utms = RefreshUtms();
+	FString TempHelikaReferralLink = RefreshLinkId();
+	FString CurrentUrl = "CurrentUrl";
+	FString ReferralCode = "RefCode";
+	
+	TSharedPtr<FJsonObject> ReferralEvent = MakeShareable(new FJsonObject());
+	ReferralEvent->SetArrayField("utms", Utms);
+	ReferralEvent->SetStringField("link_id", TempHelikaReferralLink);
+	ReferralEvent->SetStringField("url", CurrentUrl);
+	ReferralEvent->SetStringField("referral_code", ReferralCode);
+
+	HelikaData->SetObjectField("referral_data", ReferralEvent);
+	
+	return HelikaData;
+}
+
+void UHelikaManager::AddUrlParam(FString Key, FString Value)
+{
+	if (Key.IsEmpty())
+	{
+		UE_LOG(LogHelika, Error, TEXT("Cannot add empty key to UrlParams..! "));
+		return;
+	}
+	UrlParams.Emplace(Key, Value);	
+}
+
+FString UHelikaManager::GetUrlParam(FString Key)
+{
+	if(UrlParams.Contains(Key))
+	{
+		return *UrlParams.Find(Key);
+	}
+	UE_LOG(LogHelika, Warning, TEXT("Parameter with '%s' not found..!"), *Key);
+	return FString();
+}
+
+TArray<TSharedPtr<FJsonValue>> UHelikaManager::GetAllUrlParams()
+{
+	TArray<TSharedPtr<FJsonValue>> TemplateParams;
+
+	UE_LOG(LogHelika, Log, TEXT("Count Of pa %d"), UrlParams.Num());
+	if(UrlParams.IsEmpty())
+	{
+		return TemplateParams;
+	}
+	for(auto Pair : UrlParams)
+	{
+		TSharedPtr<FJsonObject> TempEvent = MakeShareable(new FJsonObject());
+		TempEvent->SetStringField("key", Pair.Key);
+		TempEvent->SetStringField("value", Pair.Value);
+		TemplateParams.Add(MakeShareable(new FJsonValueObject(TempEvent)));
+	}
+
+	return TemplateParams;
+}
+
 FDateTime UHelikaManager::AddHours(const FDateTime Date, const int Hours)
 {
 	FDateTime NewDateTime = Date + FTimespan(Hours, 0, 0);
@@ -666,6 +724,20 @@ void UHelikaManager::EndSession() const
 
 	// send event to helika API
 	SendHTTPPost("/game/game-event", JsonString);
+}
+
+FString UHelikaManager::RefreshLinkId()
+{
+	if(HelikaReferralLink.IsEmpty())
+	{
+		HelikaReferralLink = GetUrlParam("linkId");
+	}
+	return HelikaReferralLink;
+}
+
+TArray<TSharedPtr<FJsonValue>> UHelikaManager::RefreshUtms()
+{
+	return GetAllUrlParams();
 }
 
 TSharedPtr<FJsonObject> UHelikaManager::CreateInstallEvent()
@@ -865,4 +937,79 @@ FString UHelikaManager::GenerateAnonId(bool bBypassStored)
 	}
 	
 	return FString("anon_" + Hash.ToString());
+}
+
+TSharedPtr<FJsonObject> UHelikaManager::PopulateDefaultValues(EEventType Type, TSharedPtr<FJsonObject> Values)
+{
+	switch(Type)
+	{
+		case EEventType::ET_User :
+			{
+				if (!Values->HasField(TEXT("email")))
+				{
+					Values->SetStringField("email", Values->GetStringField(TEXT("email")));
+				}
+				else
+				{
+					Values->SetObjectField("email", nullptr);
+				}
+				if (!Values->HasField(TEXT("wallet_id")))
+				{
+					Values->SetStringField("wallet_id", Values->GetStringField(TEXT("wallet_id")));
+				}
+				else
+				{
+					Values->SetObjectField("wallet_id", nullptr);
+				}
+				return Values;
+			}
+		case EEventType::ET_App :
+			{
+				if (!Values->HasField(TEXT("platform_id")))
+				{
+					Values->SetStringField("platform_id", Values->GetStringField(TEXT("platform_id")));
+				}
+				else
+				{
+					Values->SetObjectField("platform_id", nullptr);
+				}
+				if (!Values->HasField(TEXT("client_app_version")))
+				{
+					Values->SetStringField("client_app_version", Values->GetStringField(TEXT("client_app_version")));
+				}
+				else
+				{
+					Values->SetObjectField("client_app_version", nullptr);
+				}
+				if (!Values->HasField(TEXT("server_app_version")))
+				{
+					Values->SetStringField("server_app_version", Values->GetStringField(TEXT("server_app_version")));
+				}
+				else
+				{
+					Values->SetObjectField("server_app_version", nullptr);
+				}
+				if (!Values->HasField(TEXT("store_id")))
+				{
+					Values->SetStringField("store_id", Values->GetStringField(TEXT("store_id")));
+				}
+				else
+				{
+					Values->SetObjectField("store_id", nullptr);
+				}
+				if (!Values->HasField(TEXT("source_id")))
+				{
+					Values->SetStringField("source_id", Values->GetStringField(TEXT("source_id")));
+				}
+				else
+				{
+					Values->SetObjectField("source_id", nullptr);
+				}
+				return Values;
+			}
+		default :
+			{
+				return Values;
+			}
+	}
 }
