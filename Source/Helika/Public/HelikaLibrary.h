@@ -59,9 +59,12 @@ public:
 public:
 
 	static void AddIfNull(const TSharedPtr<FJsonObject>& HelikaEvent, const FString& Key, const FString& NewValue);
+	static void AddIfNull(const TSharedPtr<FJsonObject>& HelikaEvent, const FString& Key, const TSharedPtr<FJsonObject>& NewValue);
 	static void AddOrReplace(const TSharedPtr<FJsonObject>& HelikaEvent, const FString& Key, const FString& NewValue);
+	static void AddOrReplace(const TSharedPtr<FJsonObject>& HelikaEvent, const FString& Key, const TSharedPtr<FJsonObject>& NewValue);
 
 	static FString GetIdfv();
 	static FString GetIdfa();
 	static FString GetAndroidAdID();
+	static FString ComputeSha256Hash(const FString& RawData);
 };

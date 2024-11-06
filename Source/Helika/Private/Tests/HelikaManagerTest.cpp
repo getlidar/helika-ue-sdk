@@ -51,19 +51,19 @@ bool FHelikaSendEventTest::RunTest(const FString& Parameters)
 	UHelikaLibrary::GetHelikaSettings()->GameId = "ValidGameId";
 
 	// calling before initialization
-	TestTrue("Helika SDK is not initialized", !HelikaManager->SendEvent("HelikaEvent", TSharedPtr<FJsonObject>()));
-	TestTrue("Helika SDK is not initialized", !HelikaManager->SendEvents("HelikaArrayEvent", TArray<TSharedPtr<FJsonObject>>()));
+	TestTrue("Helika SDK is not initialized", !HelikaManager->SendEvent(TSharedPtr<FJsonObject>()));
+	TestTrue("Helika SDK is not initialized", !HelikaManager->SendEvents(TArray<TSharedPtr<FJsonObject>>()));
 	
 	HelikaManager->InitializeSDK();
 	
 	// InValid Parameters
-	TestTrue("Event data cannot be null or empty" , !HelikaManager->SendEvent("HelikaEvent", nullptr));
-	TestTrue("Passing empty event name" , !HelikaManager->SendEvent("", nullptr));
-	TestTrue("Event name cannot only contains spaces", !HelikaManager->SendEvent("             ", nullptr));
+	TestTrue("Event data cannot be null or empty" , !HelikaManager->SendEvent(nullptr));
+	TestTrue("Passing empty event name" , !HelikaManager->SendEvent(nullptr));
+	TestTrue("Event name cannot only contains spaces", !HelikaManager->SendEvent(nullptr));
 	
 
 	// Valid Parameters
-	TestTrue("Event data cannot be null", HelikaManager->SendEvent("HelikaEvent", MakeShareable(new FJsonObject())));
+	TestTrue("Event data cannot be null", HelikaManager->SendEvent(MakeShareable(new FJsonObject())));
 	
 	TSharedPtr<FJsonObject> EventData = MakeShareable(new FJsonObject());
 	EventData->SetStringField("String Field", "Helika");
@@ -72,7 +72,7 @@ bool FHelikaSendEventTest::RunTest(const FString& Parameters)
 	EventData->SetObjectField("eventObject", nullptr);
 	EventData->SetArrayField("eventArray", TArray<TSharedPtr<FJsonValue>>());
 
-	TestTrue("Invalid Parameter Call", HelikaManager->SendEvent("HelikaEvent", EventData));
+	TestTrue("Invalid Parameter Call", HelikaManager->SendEvent(EventData));
 
 
 
@@ -80,9 +80,9 @@ bool FHelikaSendEventTest::RunTest(const FString& Parameters)
 	//Testing SendEvents
 
 	// InValid Parameters
-	TestTrue("Event data cannot be null or empty" , !HelikaManager->SendEvents("HelikaArrayEvent", TArray<TSharedPtr<FJsonObject>>()));
-	TestTrue("Passing empty event name" , !HelikaManager->SendEvents("", TArray<TSharedPtr<FJsonObject>>()));
-	TestTrue("Event name cannot only contains spaces", !HelikaManager->SendEvents("             ", TArray<TSharedPtr<FJsonObject>>()));
+	TestTrue("Event data cannot be null or empty" , !HelikaManager->SendEvents(TArray<TSharedPtr<FJsonObject>>()));
+	TestTrue("Passing empty event name" , !HelikaManager->SendEvents(TArray<TSharedPtr<FJsonObject>>()));
+	TestTrue("Event name cannot only contains spaces", !HelikaManager->SendEvents(TArray<TSharedPtr<FJsonObject>>()));
 
 	// Valid Parameters
 	{
@@ -92,7 +92,7 @@ bool FHelikaSendEventTest::RunTest(const FString& Parameters)
 		EventArray.Add(EventData1);
 		EventArray.Add(EventData2);
 		
-		TestTrue("Invalid Parameter Call", HelikaManager->SendEvents("HelikaArrayEvent", EventArray));		
+		TestTrue("Invalid Parameter Call", HelikaManager->SendEvents(EventArray));		
 	}
 
 	{
@@ -105,7 +105,7 @@ bool FHelikaSendEventTest::RunTest(const FString& Parameters)
 		EventArray.Add(EventData1);
 		EventArray.Add(EventData2);
 		
-		TestTrue("Invalid Parameter Call", HelikaManager->SendEvents("HelikaArrayEvent", EventArray));		
+		TestTrue("Invalid Parameter Call", HelikaManager->SendEvents(EventArray));		
 	}
 	
 	{
@@ -121,7 +121,7 @@ bool FHelikaSendEventTest::RunTest(const FString& Parameters)
 		EventArray.Add(EventData1);
 		EventArray.Add(EventData2);
 		
-		TestTrue("Invalid Parameter Call", HelikaManager->SendEvents("HelikaArrayEvent", EventArray));		
+		TestTrue("Invalid Parameter Call", HelikaManager->SendEvents(EventArray));		
 	}
 	
 	
@@ -145,19 +145,19 @@ bool FHelikaSendCustomEventTest::RunTest(const FString& Parameters)
 	UHelikaLibrary::GetHelikaSettings()->GameId = "ValidGameId";
 
 	// Calling before initialization
-	TestTrue("Helika SDK is not initialized", !HelikaManager->SendCustomEvent(TSharedPtr<FJsonObject>()));
-	TestTrue("Helika SDK is not initialized", !HelikaManager->SendCustomEvents(TArray<TSharedPtr<FJsonObject>>()));
+	TestTrue("Helika SDK is not initialized", !HelikaManager->SendUserEvent(TSharedPtr<FJsonObject>()));
+	TestTrue("Helika SDK is not initialized", !HelikaManager->SendUserEvents(TArray<TSharedPtr<FJsonObject>>()));
 	
 	HelikaManager->InitializeSDK();
 	
 	// InValid Parameters
-	TestTrue("Event data cannot be null or empty" , !HelikaManager->SendCustomEvent(nullptr));
-	TestTrue("Invalid Event, Does not contain 'event_type' field", !HelikaManager->SendCustomEvent(MakeShareable(new FJsonObject())));
+	TestTrue("Event data cannot be null or empty" , !HelikaManager->SendUserEvent(nullptr));
+	TestTrue("Invalid Event, Does not contain 'event_type' field", !HelikaManager->SendUserEvent(MakeShareable(new FJsonObject())));
 	
 	{
 		TSharedPtr<FJsonObject> EventData = MakeShareable(new FJsonObject());
 		EventData->SetStringField("event_type", "");
-		TestTrue("Invalid Event, 'event_type' field is empty", !HelikaManager->SendCustomEvent(EventData));
+		TestTrue("Invalid Event, 'event_type' field is empty", !HelikaManager->SendUserEvent(EventData));
 	}
 	
 	
@@ -166,7 +166,7 @@ bool FHelikaSendCustomEventTest::RunTest(const FString& Parameters)
 		TSharedPtr<FJsonObject> EventData = MakeShareable(new FJsonObject());
 		EventData->SetStringField("event_type", "helikaEvent");
 	
-		TestTrue("Invalid Parameter Call", HelikaManager->SendCustomEvent(EventData));
+		TestTrue("Invalid Parameter Call", HelikaManager->SendUserEvent(EventData));
 	}
 	
 	{
@@ -176,7 +176,7 @@ bool FHelikaSendCustomEventTest::RunTest(const FString& Parameters)
 		EventData->SetNumberField("Number Field", 1234);
 		EventData->SetBoolField("Bool value", true);
 	
-		TestTrue("Invalid Parameter Call", HelikaManager->SendCustomEvent(EventData));
+		TestTrue("Invalid Parameter Call", HelikaManager->SendUserEvent(EventData));
 	}
 	
 	
@@ -185,7 +185,7 @@ bool FHelikaSendCustomEventTest::RunTest(const FString& Parameters)
 	//Testing SendCustomEvents
 	
 	// InValid Parameters
-	TestTrue("Event data cannot be null or empty" , !HelikaManager->SendCustomEvents(TArray<TSharedPtr<FJsonObject>>()));
+	TestTrue("Event data cannot be null or empty" , !HelikaManager->SendUserEvents(TArray<TSharedPtr<FJsonObject>>()));
 	
 	{
 		TSharedPtr<FJsonObject> EventData1 = MakeShareable(new FJsonObject());
@@ -194,7 +194,7 @@ bool FHelikaSendCustomEventTest::RunTest(const FString& Parameters)
 		EventArray.Add(EventData1);
 		EventArray.Add(EventData2);
 		
-		TestTrue("Event Data Objects does not contain 'event_type' field", !HelikaManager->SendCustomEvents(EventArray));
+		TestTrue("Event Data Objects does not contain 'event_type' field", !HelikaManager->SendUserEvents(EventArray));
 	}
 	
 	{
@@ -206,7 +206,7 @@ bool FHelikaSendCustomEventTest::RunTest(const FString& Parameters)
 		EventArray.Add(EventData1);
 		EventArray.Add(EventData2);
 		
-		TestTrue("Event Data Objects contain 'event_type' field as empty", !HelikaManager->SendCustomEvents(EventArray));
+		TestTrue("Event Data Objects contain 'event_type' field as empty", !HelikaManager->SendUserEvents(EventArray));
 	}
 	
 	// Valid Parameters
@@ -219,7 +219,7 @@ bool FHelikaSendCustomEventTest::RunTest(const FString& Parameters)
 		EventArray.Add(EventData1);
 		EventArray.Add(EventData2);
 		
-		TestTrue("Invalid Parameter call", HelikaManager->SendCustomEvents(EventArray));	
+		TestTrue("Invalid Parameter call", HelikaManager->SendUserEvents(EventArray));	
 	}
 	
 	{
@@ -237,7 +237,7 @@ bool FHelikaSendCustomEventTest::RunTest(const FString& Parameters)
 		EventArray.Add(EventData1);
 		EventArray.Add(EventData2);
 		
-		TestTrue("Invalid parameter call", HelikaManager->SendCustomEvents(EventArray));	
+		TestTrue("Invalid parameter call", HelikaManager->SendUserEvents(EventArray));	
 	}
 	
 	

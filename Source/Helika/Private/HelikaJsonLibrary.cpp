@@ -223,3 +223,38 @@ FHelikaJsonObject UHelikaJsonLibrary::ConvertJsonValueToObject(const FHelikaJson
 	}
 	return Object;
 }
+
+TSharedPtr<FJsonValue> UHelikaJsonLibrary::GetFieldFromJsonObject(const TSharedPtr<FJsonObject>& JsonObject, const FString& FieldName)
+{
+	if(FieldName.IsEmpty())
+	{
+		return nullptr;
+	}
+
+	if(TSharedPtr<FJsonValue> NewValue = JsonObject->TryGetField(FieldName); NewValue.IsValid())
+	{
+		return NewValue;
+	}
+
+	return nullptr;
+}
+
+void UHelikaJsonLibrary::MergeJObjects(const TSharedPtr<FJsonObject>& Object1, const TSharedPtr<FJsonObject>& Object2, const bool bOverwrite)
+{
+    if(!Object1 || !Object1.IsValid() || !Object2 || !Object2.IsValid())
+    {
+	    return;
+    }
+	
+	TArray<FString> Keys;
+	Object2->Values.GetKeys(Keys);
+
+	for (auto Key : Keys)
+	{
+		if(bOverwrite == false && Object1->HasField(Key))
+		{
+			continue;
+		}
+		Object1->SetField(Key, GetFieldFromJsonObject(Object2, Key));
+	}
+}

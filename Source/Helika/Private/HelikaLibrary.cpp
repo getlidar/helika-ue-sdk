@@ -7,6 +7,7 @@
 #include "HelikaTypes.h"
 #include "IPAddress.h"
 #include "SocketSubsystem.h"
+#include <openssl/sha.h>
 #if PLATFORM_IOS
 
 #include <UIKit/UIKit.h>
@@ -196,6 +197,14 @@ void UHelikaLibrary::AddIfNull(const TSharedPtr<FJsonObject>& HelikaEvent, const
     }
 }
 
+void UHelikaLibrary::AddIfNull(const TSharedPtr<FJsonObject>& HelikaEvent, const FString& Key, const TSharedPtr<FJsonObject>& NewValue)
+{
+    if(!HelikaEvent->HasField(Key))
+    {
+        HelikaEvent->SetObjectField(Key, NewValue);
+    }
+}
+
 void UHelikaLibrary::AddOrReplace(const TSharedPtr<FJsonObject>& HelikaEvent, const FString& Key, const FString& NewValue)
 {
     if(HelikaEvent->HasField(Key))
@@ -205,6 +214,18 @@ void UHelikaLibrary::AddOrReplace(const TSharedPtr<FJsonObject>& HelikaEvent, co
     else
     {
         HelikaEvent->SetStringField(Key, NewValue);
+    }
+}
+
+void UHelikaLibrary::AddOrReplace(const TSharedPtr<FJsonObject>& HelikaEvent, const FString& Key, const TSharedPtr<FJsonObject>& NewValue)
+{
+    if(HelikaEvent->HasField(Key))
+    {
+        HelikaEvent->SetObjectField(Key, NewValue);
+    }
+    else
+    {
+        HelikaEvent->SetObjectField(Key, NewValue);
     }
 }
 
@@ -263,6 +284,22 @@ FString UHelikaLibrary::GetAndroidAdID()
     return FAndroidMisc::GetUniqueAdvertisingId();
 #endif
     return "Unknown";
+}
+
+FString UHelikaLibrary::ComputeSha256Hash(const FString& RawData)
+{
+    FSHA256Signature Hash;
+
+    FTCHARToUTF8 Convertor(*RawData);
+    const uint8* Data = reinterpret_cast<const uint8*>(Convertor.Get());
+    int32 DataSize = Convertor.Length();
+	
+    SHA256_CTX SHA256_Context;
+    SHA256_Init(&SHA256_Context);
+    SHA256_Update(&SHA256_Context, Data, DataSize);
+    SHA256_Final(Hash.Signature, &SHA256_Context);
+
+    return Hash.ToString();
 }
 
 

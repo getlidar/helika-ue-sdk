@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "HelikaJsonLibrary.h"
 #include "HelikaTypes.h"
 #include "HelikaManager.generated.h"
 
@@ -11,14 +12,25 @@ struct FHelikaJsonObject;
 /**
  * 
  */
-UCLASS()
+UCLASS(BlueprintType)
 class HELIKA_API UHelikaManager : public UObject
 {
 	GENERATED_BODY()
 
 private:
 
-	UHelikaManager(){};
+	UHelikaManager():AppDetails(MakeShareable(new FJsonObject())), UserDetails(MakeShareable(new FJsonObject()))
+	{
+		AppDetails->SetField("platform_id", nullptr);
+		AppDetails->SetField("client_app_version", nullptr);
+		AppDetails->SetField("server_app_version", nullptr);
+		AppDetails->SetField("store_id", nullptr);
+		AppDetails->SetField("source_id", nullptr);
+
+		UserDetails->SetField("user_id", nullptr);
+		UserDetails->SetField("email", nullptr);
+		UserDetails->SetField("wallet", nullptr);
+	};
 
 	static UHelikaManager* Instance;
 
@@ -39,27 +51,29 @@ public:
 	void DeinitializeSDK();
 
 	UFUNCTION(BlueprintCallable, Category="Helika|Events")
-	void SendEvent(FString EventName, const FHelikaJsonObject& EventProps);
+	void SendEvent(const FHelikaJsonObject& EventProps);
 	UFUNCTION(BlueprintCallable, Category="Helika|Events")
-	void SendEvents(FString EventName, TArray<FHelikaJsonObject> EventProps) const; 
+	void SendEvents(TArray<FHelikaJsonObject> EventProps); 
 
 	UFUNCTION(BlueprintCallable, Category="Helika|Events")
-	void SendCustomEvent(const FHelikaJsonObject& EventProps);
+	void SendUserEvent(const FHelikaJsonObject& EventProps);
 	UFUNCTION(BlueprintCallable, Category="Helika|Events")
-	void SendCustomEvents(TArray<FHelikaJsonObject> EventProps) const;
+	void SendUserEvents(TArray<FHelikaJsonObject> EventProps);
 
 	
-	bool SendEvent(FString EventName, TSharedPtr<FJsonObject> EventProps) const;
-	bool SendEvents(FString EventName, TArray<TSharedPtr<FJsonObject>> EventProps) const;
+	bool SendEvent(TSharedPtr<FJsonObject> EventProps);
+	bool SendEvents(TArray<TSharedPtr<FJsonObject>> EventProps);
 	
-	bool SendCustomEvent(TSharedPtr<FJsonObject> EventProps) const;    
-	bool SendCustomEvents(TArray<TSharedPtr<FJsonObject>> EventProps) const;
+	bool SendUserEvent(TSharedPtr<FJsonObject> EventProps);    
+	bool SendUserEvents(TArray<TSharedPtr<FJsonObject>> EventProps);
 
 	// Sets the player ID
+	UE_DEPRECATED(0.1.1, "SetPlayerId() is deprecated. Please use SetUserDetails() instead")
 	UFUNCTION(BlueprintCallable, Category="Helika")
 	void SetPlayerId(const FString& InPlayerId);
 	
 	// Get the player ID
+	UE_DEPRECATED(0.1.1, "GetPlayerId() is deprecated. Please use GetUserDetails() instead")
 	UFUNCTION(BlueprintPure, Category="Helika")
 	FString GetPlayerId();
 
@@ -73,27 +87,51 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Helika")
 	FString GetSessionId() const;
 
-	UFUNCTION(BlueprintCallable, Category = "Helika")
-	FString GetKochavaDeviceId();
+	TSharedPtr<FJsonObject> GetUserDetails();
+	void SetUserDetails(TSharedPtr<FJsonObject> InUserDetails, bool bCreateNewAnonId = false);
 
-	TSharedPtr<FJsonObject> CreateInstallEvent();
+	UFUNCTION(BlueprintPure, Category="Helika")
+	FHelikaJsonObject GetUserDetailsAsJson();
+	UFUNCTION(BlueprintCallable, Category="Helika")
+	void SetUserDetails(const FHelikaJsonObject& InUserDetails, bool bCreateNewAnonId = false);
 
+	TSharedPtr<FJsonObject> GetAppDetails();
+	void SetAppDetails(const TSharedPtr<FJsonObject>& InAppDetails);
+
+	UFUNCTION(BlueprintPure, Category="Helika")
+	FHelikaJsonObject GetAppDetailsAsJson();
+	UFUNCTION(BlueprintCallable, Category="Helika")
+	void SetAppDetails(const FHelikaJsonObject& InAppDetails);
+
+	UFUNCTION(BlueprintPure, Category="Helika")
+	bool GetPiiTracking() const;
+	UFUNCTION(BlueprintCallable, Category="Helika")
+	void SetPiiTracking(bool bInPiiTracking, bool bSendPiiTrackingEvent = false);
+	
 protected:
 	FString BaseUrl;
 	FString SessionId;
 	ETelemetryLevel Telemetry = ETelemetryLevel::TL_None;
 	bool bIsInitialized = false;
-	FString KochavaDeviceID;
+
+	bool bPiiTracking = false;
+	FString AnonymousId;
+
+	TSharedPtr<FJsonObject> AppDetails;
+	TSharedPtr<FJsonObject> UserDetails;
 
 private:
-	TSharedPtr<FJsonObject> AppendAttributesToJsonObject(TSharedPtr<FJsonObject> JsonObject) const;
-	TSharedPtr<FJsonObject> AppendAttributesToJsonObject(const FString& EventName, const TSharedPtr<FJsonObject>& JsonObject) const;
-	void CreateSession() const;
+	TSharedPtr<FJsonObject> AppendAttributesToJsonObject(TSharedPtr<FJsonObject> JsonObject, bool bIsUserEvent);
+	void CreateSession();
 	void SendHTTPPost(const FString& Url, const FString& Data) const;
 	static void ProcessEventTrackResponse(const FString& Data);
 	static void EndSession(bool bIsSimulating);
-	FString GenerateKochavaDeviceID();
 
-	UFUNCTION(BlueprintCallable, Category = "Helika")
-	void InitializeTracking();
+	FString GenerateAnonymousId(FString Seed, bool bCreateNewAnonId = false);
+
+	TSharedPtr<FJsonObject> GetTemplateEvent(const FString& EventType, const FString& EventSubType) const;
+	void AppendHelikaData(const TSharedPtr<FJsonObject>& GameEvent) const;
+	void AppendUserDetails(const TSharedPtr<FJsonObject>& GameEvent) const;
+	void AppendAppDetails(const TSharedPtr<FJsonObject>& GameEvent) const;
+	void AppendPIITracking(const TSharedPtr<FJsonObject>& GameEvent);
 };
