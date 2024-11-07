@@ -10,28 +10,9 @@
 #include "HttpModule.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
-#if PLATFORM_ANDROID
 
-#include "Android/AndroidPlatformMisc.h"
-
-#include "Android/AndroidJNI.h"
-#include "Android/AndroidApplication.h"
-#include "Misc/OutputDeviceNull.h"
-
-#endif
 #if WITH_EDITOR
 #include "Editor.h"
-#endif
-
-
-#if PLATFORM_IOS
-
-#include <UIKit/UIKit.h>
-#include <Foundation/Foundation.h>
-
-#import <AppTrackingTransparency/AppTrackingTransparency.h>
-#import <AdSupport/AdSupport.h>
-
 #endif
 
 UHelikaManager* UHelikaManager::Instance = nullptr;
@@ -206,15 +187,6 @@ bool UHelikaManager::SendEvents(TArray<TSharedPtr<FJsonObject>> EventProps)
 }
 
 
-///
-/// Sample Usage:
-/// TSharedPtr<FJsonObject> EventData = MakeShareable(new FJsonObject());
-/// EventData->SetStringField("String Field", "Helika");
-/// EventData->SetNumberField("Number Field", 1234);
-/// EventData->SetBoolField("Bool value", true);
-/// SendUserEvent(EventData);
-/// 
-/// @param EventProps Event data in form of json object
 bool UHelikaManager::SendUserEvent(TSharedPtr<FJsonObject> EventProps)
 {
     if(!bIsInitialized)
@@ -252,24 +224,6 @@ bool UHelikaManager::SendUserEvent(TSharedPtr<FJsonObject> EventProps)
 	return true;
 }
 
-///
-/// Sample Usage:
-/// TArray<TSharedPtr<FJsonObject>> Array;
-/// TSharedPtr<FJsonObject> EventData1 = MakeShareable(new FJsonObject());
-/// EventData1->SetStringField("event_type", "gameEvent");
-/// EventData1->SetStringField("String Field", "Event1");
-/// EventData1->SetNumberField("Number Field", 1234);
-/// EventData1->SetBoolField("Bool value", true);
-/// TSharedPtr<FJsonObject> EventData2 = MakeShareable(new FJsonObject());
-/// EventData2->SetStringField("event_type", "gameEvent");
-/// EventData2->SetStringField("String Field", "Event2");
-/// EventData2->SetNumberField("Number Field", 1234);
-/// EventData2->SetBoolField("Bool value", true);
-/// Array.Add(EventData1);
-/// Array.Add(EventData2);
-/// SendUserEvents(Array);
-/// 
-/// @param EventProps Event data in form of json[] object
 bool UHelikaManager::SendUserEvents(TArray<TSharedPtr<FJsonObject>> EventProps)
 {
     if(!bIsInitialized)
@@ -290,6 +244,11 @@ bool UHelikaManager::SendUserEvents(TArray<TSharedPtr<FJsonObject>> EventProps)
     TArray<TSharedPtr<FJsonValue>> EventArrayJsonObject;
     for (auto EventProp : EventProps)
     {
+    	if(!EventProp.IsValid())
+    	{
+    		UE_LOG(LogHelika, Error, TEXT("'Event Props' contains invalid/null object"));
+    		return false;
+    	}
         const TSharedPtr<FJsonValueObject> JsonValueObject = MakeShareable(new FJsonValueObject(AppendAttributesToJsonObject(EventProp, true)));
         EventArrayJsonObject.Add(JsonValueObject);
     }        
@@ -386,7 +345,6 @@ TSharedPtr<FJsonObject> UHelikaManager::AppendAttributesToJsonObject(TSharedPtr<
 
 void UHelikaManager::CreateSession()
 {
-
 	TSharedPtr<FJsonObject> CreateSessionEvent = GetTemplateEvent("session_created", "session_created");
 	TSharedPtr<FJsonObject> InternalEvent = CreateSessionEvent->GetObjectField(TEXT("event"));
 	AppendHelikaData(InternalEvent);
@@ -419,7 +377,8 @@ void UHelikaManager::SendHTTPPost(const FString& Url, const FString& Data) const
 {
 	if (UHelikaLibrary::GetHelikaSettings()->bPrintEventsToConsole)
 	{
-		UE_LOG(LogHelika, Display, TEXT("Sent Helika Event : %s"), *Data);
+		FString Message = FString::Printf(TEXT("[Helika] Event Sent: %s\nEvent:\n%s"), Telemetry > ETelemetryLevel::TL_None ? TEXT("Sent") : TEXT("Print Only"), *Data);
+		UE_LOG(LogHelika, Display, TEXT("%s"), *Message);
 		return;
 	}
 	if (Telemetry > ETelemetryLevel::TL_None)
@@ -590,12 +549,12 @@ void UHelikaManager::SetAppDetails(const FHelikaJsonObject& InAppDetails)
 	SetAppDetails(InAppDetails.Object);
 }
 
-bool UHelikaManager::GetPiiTracking() const
+bool UHelikaManager::GetPIITracking() const
 {
 	return bPiiTracking;
 }
 
-void UHelikaManager::SetPiiTracking(bool bInPiiTracking, bool bSendPiiTrackingEvent)
+void UHelikaManager::SetPIITracking(bool bInPiiTracking, bool bSendPiiTrackingEvent)
 {
 	bPiiTracking = bInPiiTracking;
 

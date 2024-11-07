@@ -34,13 +34,13 @@ public:
 
 	/// Print Events to console
 	UPROPERTY(Config, EditAnywhere, Category = "Helika")
-	bool bPrintEventsToConsole;
+	bool bPrintEventsToConsole = true;
 
 	UPROPERTY(Config, VisibleAnywhere, Category = "Helika")
 	FString SDKName = "Unreal";
 	
 	UPROPERTY(Config, VisibleAnywhere, Category = "Helika")
-	FString SDKVersion = "0.2.0";
+	FString SDKVersion = "0.3.0";
 
 	UPROPERTY(Config, VisibleAnywhere, Category = "Helika")
 	FString SDKClass = "HelikaSubsystem";

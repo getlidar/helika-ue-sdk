@@ -104,9 +104,9 @@ public:
 	void SetAppDetails(const FHelikaJsonObject& InAppDetails);
 
 	UFUNCTION(BlueprintPure, Category="Helika")
-	bool GetPiiTracking() const;
+	bool GetPIITracking() const;
 	UFUNCTION(BlueprintCallable, Category="Helika")
-	void SetPiiTracking(bool bInPiiTracking, bool bSendPiiTrackingEvent = false);
+	void SetPIITracking(bool bInPiiTracking, bool bSendPiiTrackingEvent = false);
 	
 protected:
 	FString BaseUrl;
