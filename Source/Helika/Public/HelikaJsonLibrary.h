@@ -208,5 +208,19 @@ public:
 	/// @param JsonValue json value to convert
 	/// @return object value
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "ToJsonObject (JsonValue)", CompactNodeTitle = "->", BlueprintAutocast, NativeBreakFunc), Category = "Helika|Json|Value")
-	static FHelikaJsonObject ConvertJsonValueToObject(const FHelikaJsonValue& JsonValue);	
+	static FHelikaJsonObject ConvertJsonValueToObject(const FHelikaJsonValue& JsonValue);
+
+	/// Get Specified field from the json object
+	/// 
+	/// @param JsonObject source json object
+	/// @param FieldName field to find
+	/// @return return the field value
+	static TSharedPtr<FJsonValue> GetFieldFromJsonObject(const TSharedPtr<FJsonObject>& JsonObject, const FString& FieldName);
+
+	/// Merge two json objects into one
+	/// 
+	/// @param Object1 json object to merger into
+	/// @param Object2 json object that will be merged
+	/// @param bOverwrite whether to overwrite if object1 already contains the respective field form object2
+	static void MergeJObjects(const TSharedPtr<FJsonObject>& Object1, const TSharedPtr<FJsonObject>& Object2, bool bOverwrite = false);
 };
