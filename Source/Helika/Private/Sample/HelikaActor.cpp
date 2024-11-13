@@ -31,7 +31,7 @@ void AHelikaActor::BeginPlay()
 
 	{
 		TSharedPtr<FJsonObject> UserDetails = MakeShareable(new FJsonObject());
-		UserDetails->SetStringField("user_id", HelikaManager->GetPlayerId());
+		UserDetails->SetStringField("user_id", "user_id_test");
 		UserDetails->SetStringField("email", "test@gmail.com");
 		UserDetails->SetStringField("wallet", "0x8540507642419A0A8Af94Ba127F175dA090B58B0");
 		
