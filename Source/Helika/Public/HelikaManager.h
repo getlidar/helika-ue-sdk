@@ -67,16 +67,6 @@ public:
 	bool SendUserEvent(TSharedPtr<FJsonObject> EventProps);    
 	bool SendUserEvents(TArray<TSharedPtr<FJsonObject>> EventProps);
 
-	// Sets the player ID
-	UE_DEPRECATED(0.1.1, "SetPlayerId() is deprecated. Please use SetUserDetails() instead")
-	UFUNCTION(BlueprintCallable, Category="Helika")
-	void SetPlayerId(const FString& InPlayerId);
-	
-	// Get the player ID
-	UE_DEPRECATED(0.1.1, "GetPlayerId() is deprecated. Please use GetUserDetails() instead")
-	UFUNCTION(BlueprintPure, Category="Helika")
-	FString GetPlayerId();
-
 	// Set weather to print events to console or not
 	UFUNCTION(BlueprintCallable, Category="Helika")
 	void SetPrintToConsole(bool bInPrintEventsToConsole);
