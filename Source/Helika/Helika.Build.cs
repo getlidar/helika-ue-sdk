@@ -1,5 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
+using System.IO;
 using UnrealBuildTool;
 
 public class Helika : ModuleRules
@@ -31,9 +32,21 @@ public class Helika : ModuleRules
                 "InputCore",
                 "HTTP",
                 "Json",
-                "JsonUtilities"
+                "JsonUtilities",
+                "Sockets",
+                "Networking",
+                "OpenSSL"
             }
 			);
+
+		if (Target.bBuildEditor)
+		{
+			PublicDependencyModuleNames.AddRange(
+				new string[]
+				{
+					"UnrealEd"	
+				});
+		}
 			
 		
 		PrivateDependencyModuleNames.AddRange(
@@ -43,6 +56,7 @@ public class Helika : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+				"OpenSSL"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
@@ -54,5 +68,16 @@ public class Helika : ModuleRules
 				// ... add any modules that your module loads dynamically here ...
 			}
 			);
+		
+		AddEngineThirdPartyPrivateStaticDependencies(Target, "OpenSSL");
+
+		if (Target.Platform == UnrealTargetPlatform.IOS)
+		{
+			PublicFrameworks.AddRange(new string[]
+			{
+				"AdSupport",
+				"AppTrackingTransparency"
+			});
+		}
 	}
 }

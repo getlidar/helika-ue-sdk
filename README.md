@@ -32,18 +32,29 @@ The plugin is now installed and enabled in your Unreal Engine project.
 
 Steps to Run Helika Events
 
-1.After installing the plugin, Add BP_HelikaActor to your level From All->Plugins->Helika Content.
+1. After installing the plugin, Add in the required config values in Project Settings->Plugins->Helika. You'll need to set the Api Key, Game ID, set the Helika Environment to either Localhost, Develop, or Production and set the Telemetry to None, TelemetryOnly or All. You can also programmatically set the Player ID at any time. It is simply appended to all sent events.
 
-![image](https://github.com/getlidar/helika-ue-sdk/assets/35335528/dba90961-1d64-422a-b35c-91d69dc83507)
+![Step1](https://github.com/user-attachments/assets/b2f42773-f694-44f9-b008-fdad38b64b9f)
 
-2. Now select BP_HelikaActor in your level and add in the required config values in Details Menu.
-You'll need to set the Api Key, Game ID and set the Helika Env to either Localhost, Develop, or Production.
-You can also programmatically set the Player ID at any time. It is simply appended to all sent events.
+2. Blueprint Usage : 
+    - Access the HelikaManager through HelikaSubsytem and Initialize the SDK. You only have to do this step once (Recommended: Initialize the SDK with your respective GameInstance Init method) 
+    ![Step2-1](https://github.com/user-attachments/assets/89014a04-9cae-419e-8e16-0723493a2e6f)
 
-![image](https://github.com/getlidar/helika-ue-sdk/assets/35335528/a978b536-3837-480e-91ac-d862438990cc)
+    - Get reference to HelikaManager through HelikaSubsytem and Call "Send Event" Function with your Custom event Data and event name to send event to Helika.
+    ![Step2-2](https://github.com/user-attachments/assets/07276684-134d-404a-885c-abe6b1419dac)
 
-3.Get Reference to BP_HelikaActor From your Level and Call "Send Event" Function with you'r Custom event Data to send event to Helika.
+    - You can also send an array of events to Helika.
+    ![Step2-3](https://github.com/user-attachments/assets/efb028d1-7ced-4590-aefe-49b9c98bb4e4)
 
-![image](https://github.com/getlidar/helika-ue-sdk/assets/35335528/ad962789-65d6-474e-b4db-34707b00740d)
+3. C++ Usage:
+    - Add following dependencies to your project build file and refresh your project.
+    ![Step3-1](https://github.com/user-attachments/assets/4bd178e0-f086-4ef9-9990-6045cdec1112)
 
+    - Access the HelikaManager singleton instance and Initialize the SDK. You only have to do this step once (Recommended: Initialize the SDK with your respective GameInstance Init method).
+    ![Step3-2](https://github.com/user-attachments/assets/dcb12751-105d-4c6e-9f34-6eea6f5b0e56)
 
+    - Get reference to HelikaManager and Call "Send Event" Function with your Custom event Data and event name to send event to Helika. 
+    ![Step3-3](https://github.com/user-attachments/assets/75975fee-5d5f-4781-aa11-207951f56d01)
+
+    - You can also send an array of events to Helika. 
+    ![Step3-4](https://github.com/user-attachments/assets/ab4ec2f2-e216-4025-8c8e-33301905c37a)
