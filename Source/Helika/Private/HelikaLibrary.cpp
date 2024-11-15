@@ -189,14 +189,20 @@ TSharedPtr<FJsonObject> UHelikaLibrary::GetDeviceIDs()
     return DeviceIds;
 }
 
-void UHelikaLibrary::AddIfNull(const TSharedPtr<FJsonObject>& HelikaEvent, const FString& Key, const FString& NewValue)
+void UHelikaLibrary::AddIfNull(const TSharedPtr<FJsonObject> &HelikaEvent, const FString &Key, const FString &NewValue)
 {
-    HelikaEvent->SetStringField(Key, NewValue);
+    if (HelikaEvent.IsValid() && !HelikaEvent->HasField(Key))
+    {
+        HelikaEvent->SetStringField(Key, NewValue);
+    }
 }
 
-void UHelikaLibrary::AddIfNull(const TSharedPtr<FJsonObject>& HelikaEvent, const FString& Key, const TSharedPtr<FJsonObject>& NewValue)
+void UHelikaLibrary::AddIfNull(const TSharedPtr<FJsonObject> &HelikaEvent, const FString &Key, const TSharedPtr<FJsonObject> &NewValue)
 {
-    HelikaEvent->SetObjectField(Key, NewValue);
+    if (HelikaEvent.IsValid() && !HelikaEvent->HasField(Key) && NewValue.IsValid())
+    {
+        HelikaEvent->SetObjectField(Key, NewValue);
+    }
 }
 
 void UHelikaLibrary::AddOrReplace(const TSharedPtr<FJsonObject>& HelikaEvent, const FString& Key, const FString& NewValue)
