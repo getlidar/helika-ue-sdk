@@ -390,7 +390,7 @@ void UHelikaManager::SendHTTPPost(const FString& Url, const FString& Data) const
 				}
 				else
 				{
-					UE_LOG(LogHelika, Error, TEXT("Request failed..! due to %s"), LexToString(Request->GetFailureReason()));
+					UE_LOG(LogHelika, Error, TEXT("Request failed..! due to %s"), Request->GetStatus());
 				}
 			});
 
