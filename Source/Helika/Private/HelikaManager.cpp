@@ -136,7 +136,7 @@ bool UHelikaManager::SendEvent(TSharedPtr<FJsonObject> EventProps)
 	}
 
 	// send event to helika API
-	SendHTTPPost("/game/game-event", JsonString);
+	SendHTTPPost("/events/", JsonString);
 	return true;
 }
 
@@ -180,7 +180,7 @@ bool UHelikaManager::SendEvents(TArray<TSharedPtr<FJsonObject>> EventProps)
 	}
 
 	// send event to helika API
-	SendHTTPPost("/game/game-event", JsonString);
+	SendHTTPPost("/events/", JsonString);
 
 	return true;
 }
@@ -219,7 +219,7 @@ bool UHelikaManager::SendUserEvent(TSharedPtr<FJsonObject> EventProps)
 	}
 
 	// send event to helika API
-	SendHTTPPost("/game/game-event", JsonString);
+	SendHTTPPost("/events/", JsonString);
 	return true;
 }
 
@@ -263,7 +263,7 @@ bool UHelikaManager::SendUserEvents(TArray<TSharedPtr<FJsonObject>> EventProps)
 	}
 
 	// send event to helika API
-	SendHTTPPost("/game/game-event", JsonString);
+	SendHTTPPost("/events/", JsonString);
 
 	return true;
 }
@@ -354,7 +354,7 @@ void UHelikaManager::CreateSession()
 		return;
 	}
 
-	SendHTTPPost("/game/game-event", JSONPayload);
+	SendHTTPPost("/events/", JSONPayload);
 }
 
 void UHelikaManager::SendHTTPPost(const FString& Url, const FString& Data) const
@@ -566,6 +566,6 @@ void UHelikaManager::SetPIITracking(bool bInPiiTracking, bool bSendPiiTrackingEv
 			return;
 		}
 
-		SendHTTPPost("/game/game-event", JSONPayload);
+		SendHTTPPost("/events/", JSONPayload);
 	}
 }

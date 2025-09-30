@@ -29,17 +29,16 @@ UHelikaSettings* UHelikaLibrary::GetHelikaSettings()
 
 FString UHelikaLibrary::ConvertUrl(const EHelikaEnvironment InHelikaEnvironment)
 {
-	switch (InHelikaEnvironment)
-	{
-	case EHelikaEnvironment::HE_Production:
-		return "https://api.helika.io/v1";
-	case EHelikaEnvironment::HE_Develop:
-		return "https://api-stage.helika.io/v1";
-	case EHelikaEnvironment::HE_Localhost:
-		return "http://localhost:8181/v1";
-	default:
-		return "http://localhost:8181/v1";
-	}
+    switch (InHelikaEnvironment)
+    {
+    case EHelikaEnvironment::HE_Production:
+    case EHelikaEnvironment::HE_Develop:
+        return "https://events.analytics.helika.io";
+    case EHelikaEnvironment::HE_Localhost:
+        return "http://localhost:8181/v1";
+    default:
+        return "http://localhost:8181/v1";
+    }
 }
 
 FString UHelikaLibrary::CreateNewGuid()
