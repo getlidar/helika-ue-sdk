@@ -40,7 +40,7 @@ public:
 	FString SDKName = "Unreal";
 	
 	UPROPERTY(Config, VisibleAnywhere, Category = "Helika")
-	FString SDKVersion = "0.3.0";
+	FString SDKVersion = "0.4.0";
 
 	UPROPERTY(Config, VisibleAnywhere, Category = "Helika")
 	FString SDKClass = "HelikaSubsystem";
