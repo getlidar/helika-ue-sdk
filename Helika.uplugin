@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "1.0",
+	"VersionName": "1.1",
 	"FriendlyName": "Helika",
 	"Description": "The Helika SDK is a powerful toolkit for integrating Helika services into your applications. With the Helika SDK, you can easily leverage the full capabilities of Helika and build robust and scalable solutions.",
 	"Category": "Other",
