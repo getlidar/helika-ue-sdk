@@ -18,7 +18,7 @@ enum class EJsonType : uint8
 	Object
 };
 
-USTRUCT(BlueprintType, meta = (HasNativeMake = "Helika.HelikaJsonLibrary.MakeJson"))
+USTRUCT(BlueprintType, meta = (HasNativeMake = "/Script/Helika.HelikaJsonLibrary.MakeJson"))
 struct FHelikaJsonObject
 {
 	GENERATED_USTRUCT_BODY()

@@ -363,7 +363,7 @@ void UHelikaManager::SendHTTPPost(const FString& Url, const FString& Data) const
 	{
 		FString Message = FString::Printf(TEXT("[Helika] Event Sent: %s\nEvent:\n%s"), Telemetry > ETelemetryLevel::TL_None ? TEXT("Sent") : TEXT("Print Only"), *Data);
 		UE_LOG(LogHelika, Display, TEXT("%s"), *Message);
-		return;
+
 	}
 	if (Telemetry > ETelemetryLevel::TL_None)
 	{
@@ -390,7 +390,8 @@ void UHelikaManager::SendHTTPPost(const FString& Url, const FString& Data) const
 				}
 				else
 				{
-					UE_LOG(LogHelika, Error, TEXT("Request failed..! due to %s"), Request->GetStatus());
+					UE_LOG(LogHelika, Error, TEXT("Request failed..! due to %d"), static_cast<int32>(Request->GetStatus()));
+
 				}
 			});
 

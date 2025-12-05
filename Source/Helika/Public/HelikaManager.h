@@ -21,15 +21,15 @@ private:
 
 	UHelikaManager():AppDetails(MakeShareable(new FJsonObject())), UserDetails(MakeShareable(new FJsonObject()))
 	{
-		AppDetails->SetField("platform_id", nullptr);
-		AppDetails->SetField("client_app_version", nullptr);
-		AppDetails->SetField("server_app_version", nullptr);
-		AppDetails->SetField("store_id", nullptr);
-		AppDetails->SetField("source_id", nullptr);
+	    AppDetails->SetStringField("platform_id", TEXT(""));
+	    AppDetails->SetStringField("client_app_version", TEXT(""));
+	    AppDetails->SetStringField("server_app_version", TEXT(""));
+	    AppDetails->SetStringField("store_id", TEXT(""));
+	    AppDetails->SetStringField("source_id", TEXT(""));
 
-		UserDetails->SetField("user_id", nullptr);
-		UserDetails->SetField("email", nullptr);
-		UserDetails->SetField("wallet", nullptr);
+	    UserDetails->SetStringField("user_id", TEXT(""));
+	    UserDetails->SetStringField("email", TEXT(""));
+	    UserDetails->SetStringField("wallet", TEXT(""));
 	};
 
 	static UHelikaManager* Instance;
